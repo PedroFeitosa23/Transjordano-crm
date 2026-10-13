@@ -16,7 +16,6 @@ export function AppLayout() {
 
   return (
     <div className="flex h-dvh bg-gray-50 font-sans overflow-hidden">
-      {/* Sidebar */}
       <aside className="w-64 bg-transjordano-blue-900 text-white flex flex-col justify-between hidden lg:flex shrink-0">
         <div>
           <div className="p-6 flex items-center justify-center border-b border-gray-700/50">
@@ -43,7 +42,6 @@ export function AppLayout() {
           </nav>
         </div>
         
-        {/* User Menu */}
         <div className="p-4 border-t border-gray-700/50">
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
@@ -73,7 +71,6 @@ export function AppLayout() {
         </div>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         <header className="bg-white shadow-sm px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-4">

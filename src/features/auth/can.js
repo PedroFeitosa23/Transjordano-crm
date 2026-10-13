@@ -1,8 +1,7 @@
 export function can(user, action, resource = null) {
   if (!user || !user.role) return false;
-  if (user.role === 'manager') return true; // Manager can do everything in UI
+  if (user.role === 'manager') return true; 
 
-  // Sales specific rules
   if (user.role === 'sales') {
     switch (action) {
       case 'view:all_opportunities': return false;

@@ -28,7 +28,7 @@ export function LoginPage() {
             <Button onClick={() => handleLogin('u1')} className="w-full justify-center">Entrar como Gerente (Admin Silva)</Button>
             <Button onClick={() => handleLogin('u2')} variant="secondary" className="w-full justify-center">Entrar como Vendedor (Souza)</Button>
           </div>
-          <p className="mt-6 text-xs text-gray-500">O sistema está configurado com VITE_DATA_SOURCE=mock. Selecione um perfil para testar as permissões.</p>
+          <p className="mt-6 text-xs text-gray-500">O sistema está configurado para testes de permissão e UI.</p>
         </Card>
       </div>
     </div>

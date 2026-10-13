@@ -3,11 +3,10 @@ import { opportunitiesRepo, stagesRepo } from '@/services/repositories';
 import { useAuth } from '@/features/auth/AuthContext';
 import { can } from '@/features/auth/can';
 import { DndContext, closestCorners, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
-import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { currencyBRL, compactBRL } from '@/lib/format';
-import { Plus, GripVertical, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { GripVertical, AlertCircle } from 'lucide-react';
 
 function SortableItem({ opp }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: opp.id });
@@ -62,19 +61,16 @@ export function PipelinePage() {
     if (!over) return;
 
     const activeId = active.id;
-    const overId = over.id; // Can be a stage ID or an opp ID
+    const overId = over.id;
 
     const activeOpp = opportunities.find(o => o.id === activeId);
     if (!activeOpp) return;
 
-    // Detect target stage
     const isOverStage = stages.some(s => s.id === overId);
     const targetStageId = isOverStage ? overId : opportunities.find(o => o.id === overId)?.stageId;
     
     if (activeOpp.stageId !== targetStageId) {
-      // Move between stages (simplified optimistic update)
       setOpportunities(prev => prev.map(o => o.id === activeId ? { ...o, stageId: targetStageId, stageChangedAt: new Date().toISOString() } : o));
-      // In real app: calculate new position and await repo.update
       await opportunitiesRepo.update(activeId, { stageId: targetStageId, stageChangedAt: new Date().toISOString() });
     }
   };

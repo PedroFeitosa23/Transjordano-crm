@@ -37,14 +37,12 @@ export function DashboardPage() {
   const ganhos = calcNegociosGanhos(data.opps);
   const conversao = calcTaxaConversao(data.opps);
 
-  // Chart data prep
   const openOpps = data.opps.filter(o => o.status === 'open');
   const funilData = data.stages.filter(s => s.kind === 'open').map(stage => {
     const stageOpps = openOpps.filter(o => o.stageId === stage.id);
     return { name: stage.name, valor: stageOpps.reduce((acc, o) => acc + o.valueCents, 0) / 100 };
   }).sort((a,b) => b.valor - a.valor);
 
-  // Paradas > 14 dias
   const fourteenDaysAgo = new Date();
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
   const paradas = openOpps.filter(o => new Date(o.stageChangedAt) < fourteenDaysAgo);

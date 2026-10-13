@@ -8,7 +8,6 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock auto-login
     const saved = localStorage.getItem('mock_user_id');
     if (saved && MOCK_USERS[saved]) {
       setUser(MOCK_USERS[saved]);
