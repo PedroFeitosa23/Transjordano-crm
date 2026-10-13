@@ -1,5 +1,0 @@
-@import '@fontsource-variable/inter';
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-@layer base { body { @apply bg-gray-50 text-gray-900 antialiased; } .tabular { font-variant-numeric: tabular-nums; } }
