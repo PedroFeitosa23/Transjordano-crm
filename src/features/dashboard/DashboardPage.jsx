@@ -74,7 +74,7 @@ export function DashboardPage() {
            <p className="text-xs text-gray-500">{customDashboardData ? 'Exibindo Dashboard Importado' : 'Métricas comerciais baseadas no pipeline'}</p>
          </div>
          
-         <div className="flex gap-2">
+         <div className="flex items-center gap-3">
             <label className="cursor-pointer">
               <input type="file" accept=".json" onChange={handleImportDashboard} className="hidden" />
               <span className="flex items-center gap-2 bg-transjordano-blue-600 text-white border border-transjordano-blue-600 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-transjordano-blue-700 transition-colors outline-none">
@@ -88,32 +88,15 @@ export function DashboardPage() {
                   </button>
                </DropdownMenu.Trigger>
                <DropdownMenu.Portal>
-                  <DropdownMenu.Content className="min-w-[150px] bg-white rounded-lg shadow-pop border border-gray-200 p-1 z-50">
-                     <DropdownMenu.Item className="px-2 py-1.5 text-sm cursor-pointer outline-none hover:bg-gray-50 rounded" onSelect={() => setPeriod('Mês Atual')}>Mês Atual</DropdownMenu.Item>
-                     <DropdownMenu.Item className="px-2 py-1.5 text-sm cursor-pointer outline-none hover:bg-gray-50 rounded" onSelect={() => setPeriod('Q3 2026')}>Q3 2026</DropdownMenu.Item>
-                     <DropdownMenu.Item className="px-2 py-1.5 text-sm cursor-pointer outline-none hover:bg-gray-50 rounded" onSelect={() => setPeriod('Q4 2026')}>Q4 2026</DropdownMenu.Item>
-                     <DropdownMenu.Item className="px-2 py-1.5 text-sm cursor-pointer outline-none hover:bg-gray-50 rounded" onSelect={() => setPeriod('Ano 2026')}>Ano 2026</DropdownMenu.Item>
+                  <DropdownMenu.Content className="bg-white rounded-lg shadow-pop border border-gray-200 p-1 z-50 min-w-[200px]">
+                     <DropdownMenu.Item onSelect={()=>{setPeriod('Q1 2026'); toast.success('Dados filtrados para Q1 2026')}} className="px-3 py-2 text-sm cursor-pointer outline-none hover:bg-gray-50 rounded-md">Q1 2026</DropdownMenu.Item>
+                     <DropdownMenu.Item onSelect={()=>{setPeriod('Q2 2026'); toast.success('Dados filtrados para Q2 2026')}} className="px-3 py-2 text-sm cursor-pointer outline-none hover:bg-gray-50 rounded-md">Q2 2026</DropdownMenu.Item>
+                     <DropdownMenu.Item onSelect={()=>{setPeriod('Q3 2026'); toast.success('Dados filtrados para Q3 2026')}} className="px-3 py-2 text-sm cursor-pointer outline-none hover:bg-gray-50 rounded-md">Q3 2026</DropdownMenu.Item>
+                     <DropdownMenu.Item onSelect={()=>{setPeriod('Trimestre Atual (Q4 2026)'); toast.success('Dados filtrados para Q4 2026')}} className="px-3 py-2 text-sm cursor-pointer outline-none hover:bg-gray-50 rounded-md bg-transjordano-blue-50 font-medium">Trimestre Atual (Q4 2026)</DropdownMenu.Item>
                   </DropdownMenu.Content>
                </DropdownMenu.Portal>
             </DropdownMenu.Root>
          </div>
-      </div>
-         
-         <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-               <button className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors outline-none">
-                  <Filter size={14}/> {period}
-               </button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-               <DropdownMenu.Content className="bg-white rounded-lg shadow-pop border border-gray-200 p-1 z-50 min-w-[200px]">
-                  <DropdownMenu.Item onSelect={()=>{setPeriod('Q1 2026'); toast.success('Dados filtrados para Q1 2026')}} className="px-3 py-2 text-sm cursor-pointer outline-none hover:bg-gray-50 rounded-md">Q1 2026</DropdownMenu.Item>
-                  <DropdownMenu.Item onSelect={()=>{setPeriod('Q2 2026'); toast.success('Dados filtrados para Q2 2026')}} className="px-3 py-2 text-sm cursor-pointer outline-none hover:bg-gray-50 rounded-md">Q2 2026</DropdownMenu.Item>
-                  <DropdownMenu.Item onSelect={()=>{setPeriod('Q3 2026'); toast.success('Dados filtrados para Q3 2026')}} className="px-3 py-2 text-sm cursor-pointer outline-none hover:bg-gray-50 rounded-md">Q3 2026</DropdownMenu.Item>
-                  <DropdownMenu.Item onSelect={()=>{setPeriod('Trimestre Atual (Q4 2026)'); toast.success('Dados filtrados para Q4 2026')}} className="px-3 py-2 text-sm cursor-pointer outline-none hover:bg-gray-50 rounded-md bg-transjordano-blue-50 font-medium">Trimestre Atual (Q4 2026)</DropdownMenu.Item>
-               </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-         </DropdownMenu.Root>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
