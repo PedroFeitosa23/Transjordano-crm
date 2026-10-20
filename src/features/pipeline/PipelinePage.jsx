@@ -101,7 +101,7 @@ export function PipelinePage() {
         const oppsData = await opportunitiesRepo.list(filters);
         const stagesData = await stagesRepo.list();
         setStages(stagesData.sort((a,b) => a.order - b.order));
-        setOpportunities(oppsData.filter(o => o.status === 'open').sort((a,b) => a.position - b.position));
+        setOpportunities(oppsData.sort((a,b) => a.position - b.position));
       } finally { setLoading(false); }
     }
     load();
@@ -134,7 +134,8 @@ export function PipelinePage() {
     if (targetStageId && opportunities.find(o => o.id === activeId)?.stageId !== targetStageId) {
       const originalOpps = [...opportunities];
       setOpportunities(prev => prev.map(o => o.id === activeId ? { ...o, stageId: targetStageId, stageChangedAt: new Date().toISOString() } : o));
-      try { await opportunitiesRepo.update(activeId, { stageId: targetStageId, stageChangedAt: new Date().toISOString() }, user.uid); } 
+      try { const novoStatus = targetStageId === 's5' ? 'won' : (targetStageId === 's6' ? 'lost' : 'open');
+      await opportunitiesRepo.update(activeId, { stageId: targetStageId, status: novoStatus, stageChangedAt: new Date().toISOString() }, user.uid); } 
       catch (err) { setOpportunities(originalOpps); toast.error("Erro ao mover."); }
     }
   };
@@ -153,7 +154,7 @@ export function PipelinePage() {
   };
 
   if (loading) return <div className="animate-pulse flex gap-4 h-full p-4">{[1,2,3].map(i => <div key={i} className="w-80 h-96 bg-gray-200 rounded-xl"></div>)}</div>;
-  const openStages = stages.filter(s => s.kind === 'open');
+  const openStages = stages;
 
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full">

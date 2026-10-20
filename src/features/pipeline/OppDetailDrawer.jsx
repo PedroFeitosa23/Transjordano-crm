@@ -73,6 +73,48 @@ export function OppDetailDrawer({ opp, stage, open, onOpenChange }) {
                  <div className="flex items-center gap-3 text-sm text-gray-600"><Mail size={14}/> {contact.email}</div>
                </div>
              )}
+             
+             {/* NOVA ABA / SEÇÃO DE OBSERVAÇÕES */}
+             <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+               <h4 className="text-xs font-bold text-transjordano-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                 Observações e Atualizações
+               </h4>
+               <div className="flex flex-col gap-3">
+                 <textarea 
+                   className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-transjordano-blue-500 focus:ring-1 focus:ring-transjordano-blue-500" 
+                   rows="3" 
+                   placeholder="Escreva uma nova observação, resumo de reunião ou atualização sobre este cliente..."
+                   value={noteText}
+                   onChange={(e) => setNoteText(e.target.value)}
+                 />
+                 <Button 
+                   className="self-end" 
+                   onClick={async () => {
+                     if(!noteText.trim()) return;
+                     setIsAddingNote(true);
+                     try {
+                       await activitiesRepo.create({
+                         opportunityId: opp.id,
+                         type: 'note',
+                         summary: noteText,
+                         doneAt: new Date().toISOString(),
+                         ownerId: opp.ownerId
+                       });
+                       setNoteText('');
+                       const acts = await activitiesRepo.list({ opportunityId: opp.id });
+                       setActivities(acts.sort((a,b) => new Date(b.doneAt) - new Date(a.doneAt)));
+                       toast.success("Observação gravada com sucesso!");
+                     } catch (e) { 
+                       toast.error("Erro ao gravar observação."); 
+                     }
+                     setIsAddingNote(false);
+                   }}
+                   disabled={isAddingNote || !noteText.trim()}
+                 >
+                   Salvar Observação
+                 </Button>
+               </div>
+             </div>
 
              <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Detalhes Logísticos (Carga)</h4>
