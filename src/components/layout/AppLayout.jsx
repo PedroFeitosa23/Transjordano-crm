@@ -9,6 +9,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import * as Dialog from '@radix-ui/react-dialog';
 import { toast } from 'sonner';
 import { opportunitiesRepo, leadsRepo } from '@/services/repositories';
+import { exportAllOperationsToExcel } from '@/lib/exportExcel';
 
 export function AppLayout() {
   const { user, logout } = useAuth();
@@ -22,15 +23,8 @@ export function AppLayout() {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  const handleExport = async () => {
-     try {
-       const opps = await opportunitiesRepo.list();
-       const csv = "ID,Titulo,Valor,Status,Data\n" + opps.map(o => `${o.id},"${o.title}",${o.valueCents},${o.status},${o.createdAt}`).join("\n");
-       const blob = new Blob([csv], { type: 'text/csv' });
-       const url = window.URL.createObjectURL(blob);
-       const a = document.createElement('a'); a.href = url; a.download = 'pipeline_export.csv'; a.click();
-       toast.success('Arquivo CSV exportado com sucesso.');
-     } catch(e) { toast.error('Erro na exportação'); }
+  const handleExport = () => {
+    exportAllOperationsToExcel();
   };
 
   const handleQuickCreate = async (e) => {

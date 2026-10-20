@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { Upload } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { currencyBRL, percent, dateBR, compactBRL } from '@/lib/format';
@@ -9,10 +11,26 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { can } from '@/features/auth/can';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from 'recharts';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { toast } from 'sonner';
-
 export function DashboardPage() {
   const { user } = useAuth();
+  const [customDashboardData, setCustomDashboardData] = useState(null);
+
+  const handleImportDashboard = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target?.result);
+        setCustomDashboardData(data);
+        toast.success('Dashboard importado com sucesso!');
+      } catch (err) {
+        toast.error('Erro ao ler o arquivo JSON do Dashboard.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const [data, setData] = useState({ opps: [], stages: [], quota: null });
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('Trimestre Atual (Q4 2026)');
@@ -53,8 +71,33 @@ export function DashboardPage() {
       <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
          <div>
            <h2 className="text-lg font-semibold text-gray-800">Visão Geral</h2>
-           <p className="text-xs text-gray-500">Métricas comerciais baseadas no pipeline</p>
+           <p className="text-xs text-gray-500">{customDashboardData ? 'Exibindo Dashboard Importado' : 'Métricas comerciais baseadas no pipeline'}</p>
          </div>
+         
+         <div className="flex gap-2">
+            <label className="cursor-pointer">
+              <input type="file" accept=".json" onChange={handleImportDashboard} className="hidden" />
+              <span className="flex items-center gap-2 bg-transjordano-blue-600 text-white border border-transjordano-blue-600 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-transjordano-blue-700 transition-colors outline-none">
+                <Upload size={14} /> Importar Dashboard
+              </span>
+            </label>
+            <DropdownMenu.Root>
+               <DropdownMenu.Trigger asChild>
+                  <button className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors outline-none">
+                     <Filter size={14}/> {period}
+                  </button>
+               </DropdownMenu.Trigger>
+               <DropdownMenu.Portal>
+                  <DropdownMenu.Content className="min-w-[150px] bg-white rounded-lg shadow-pop border border-gray-200 p-1 z-50">
+                     <DropdownMenu.Item className="px-2 py-1.5 text-sm cursor-pointer outline-none hover:bg-gray-50 rounded" onSelect={() => setPeriod('Mês Atual')}>Mês Atual</DropdownMenu.Item>
+                     <DropdownMenu.Item className="px-2 py-1.5 text-sm cursor-pointer outline-none hover:bg-gray-50 rounded" onSelect={() => setPeriod('Q3 2026')}>Q3 2026</DropdownMenu.Item>
+                     <DropdownMenu.Item className="px-2 py-1.5 text-sm cursor-pointer outline-none hover:bg-gray-50 rounded" onSelect={() => setPeriod('Q4 2026')}>Q4 2026</DropdownMenu.Item>
+                     <DropdownMenu.Item className="px-2 py-1.5 text-sm cursor-pointer outline-none hover:bg-gray-50 rounded" onSelect={() => setPeriod('Ano 2026')}>Ano 2026</DropdownMenu.Item>
+                  </DropdownMenu.Content>
+               </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+         </div>
+      </div>
          
          <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
