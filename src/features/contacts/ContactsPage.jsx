@@ -25,21 +25,20 @@ export function ContactsPage() {
 
   const handleMoveToFunnel = async (lead) => {
     try {
-      // Cria uma nova oportunidade no Funil baseada nos dados do Lead
       await opportunitiesRepo.create({
         title: `Negociação - ${lead.name}`,
         contactId: lead.id,
-        valueCents: 0, // Inicia com valor 0, pode ser editado no funil
-        stageId: 'prospecting', // ID da primeira etapa do funil (Prospecção)
+        valueCents: 0,
+        stageId: 'prospecting',
         status: 'open',
         priority: 'medium',
-        ownerId: lead.ownerId,
+        ownerId: lead.ownerId || 'admin123',
         origin: '',
         destination: '',
       });
       
       toast.success(`${lead.name} foi adicionado ao Funil de Vendas!`);
-      navigate('/funil'); // Redireciona imediatamente para o funil
+      navigate('/funil');
     } catch (e) {
       toast.error('Erro ao mover lead para o funil.');
     }
@@ -64,6 +63,7 @@ export function ContactsPage() {
                 <th className="px-6 py-3">Empresa / Nome</th>
                 <th className="px-6 py-3">Telefone</th>
                 <th className="px-6 py-3">E-mail</th>
+                <th className="px-6 py-3">Origem</th>
                 <th className="px-6 py-3">Status</th>
                 <th className="px-6 py-3 text-right">Ações</th>
               </tr>
@@ -76,6 +76,7 @@ export function ContactsPage() {
                   </td>
                   <td className="px-6 py-4"><span className="flex items-center gap-1.5"><Phone size={14} className="text-gray-400"/> {l.phone}</span></td>
                   <td className="px-6 py-4"><span className="flex items-center gap-1.5"><Mail size={14} className="text-gray-400"/> {l.email}</span></td>
+                  <td className="px-6 py-4">{l.source || 'Manual'}</td>
                   <td className="px-6 py-4"><span className="px-2.5 py-1 bg-transjordano-blue-50 text-transjordano-blue-800 rounded-full text-xs font-semibold">{l.status}</span></td>
                   <td className="px-6 py-4 text-right">
                     <Button 
