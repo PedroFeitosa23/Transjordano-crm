@@ -8,8 +8,10 @@ import { Logo } from '@/components/ui/Logo';
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('gerente@transjordano.com.br');
-  const [password, setPassword] = useState('123456');
+  
+  // Campos iniciam agora completamente vazios
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -27,7 +29,7 @@ export function LoginPage() {
             <Logo className="w-full max-w-[240px] mb-2" />
           </div>
           <h2 className="text-xl font-bold text-gray-900 mt-2">Acesso ao CRM</h2>
-          <p className="text-xs text-gray-500">Faça login para gerenciar a frota e o pipeline</p>
+          <p className="text-xs text-gray-500">Faça login para gerir a frota e o pipeline</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
