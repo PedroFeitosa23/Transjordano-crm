@@ -34,7 +34,7 @@ export function AppLayout() {
        await leadsRepo.create({ name: fd.get('name'), phone: fd.get('phone'), email: fd.get('email'), score: 50, source: 'Manual', status: 'new', ownerId: user.uid });
        toast.success('Novo lead registrado!');
        setCreateOpen(false);
-       navigate('/leads');
+       navigate('/funil');
      } catch(e) { toast.error('Erro ao criar lead'); }
   };
 
@@ -99,7 +99,7 @@ export function AppLayout() {
         <div className="flex-1 flex flex-col min-h-0">
           {/* LOGO COMPACTA NO MENU LATERAL */}
           <div className="p-6 flex items-center justify-center border-b border-gray-700/50 bg-[#002046]/30 shrink-0">
-             <Logo compact className="[&_span]:text-white" />
+             <Logo className="[&_span]:text-white" />
           </div>
           <nav className="p-4 flex-1 overflow-y-auto custom-scrollbar"><NavLinks /></nav>
         </div>
@@ -134,7 +134,7 @@ export function AppLayout() {
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40 lg:hidden animate-in fade-in" />
           <Dialog.Content className="fixed inset-y-0 left-0 w-3/4 max-w-sm bg-[#002b5c] text-white shadow-xl z-50 flex flex-col focus:outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-left">
             <div className="p-4 flex items-center justify-between border-b border-gray-700/50 bg-[#002046]/30">
-              <Logo compact className="[&_span]:text-white" />
+              <Logo className="[&_span]:text-white" />
               <button onClick={() => setMobileOpen(false)} className="p-2 text-gray-400 hover:text-white"><X size={24}/></button>
             </div>
             <nav className="p-4 flex-1 overflow-y-auto custom-scrollbar"><NavLinks onClick={() => setMobileOpen(false)} /></nav>
@@ -148,7 +148,7 @@ export function AppLayout() {
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50 animate-in fade-in" />
           <Dialog.Content className="fixed top-[20%] left-[50%] translate-x-[-50%] bg-white rounded-xl shadow-2xl w-[90vw] max-w-lg z-50 overflow-hidden focus:outline-none">
-             <form onSubmit={(e) => { e.preventDefault(); setSearchOpen(false); toast.success('Busca global iniciada...'); navigate('/leads'); }} className="flex items-center p-2 border-b">
+             <form onSubmit={(e) => { e.preventDefault(); setSearchOpen(false); toast.success('Busca global iniciada...'); navigate('/funil'); }} className="flex items-center p-2 border-b">
                 <Search className="text-gray-400 ml-2" size={20} />
                 <input autoFocus type="text" placeholder="Procurar clientes, negócios ou cargas..." className="w-full p-3 focus:outline-none text-gray-700 bg-transparent" />
                 <Button type="button" variant="ghost" onClick={() => setSearchOpen(false)} className="text-gray-400">Esc</Button>

@@ -1,25 +1,15 @@
 import React from 'react';
-import { cn } from '@/lib/cn';
-import { Link } from 'react-router-dom';
+import logoImg from '@/assets/logo-transjordano.webp';
 
-export function Logo({ className, compact = false }) {
+export function Logo({ className = "", compact = false }) {
+  // Se for compact (sidebar fechada/mobile drawer top), podemos querer mostrar a imagem mas limitar a largura
   return (
-    <Link 
-      to="/" 
-      className={cn(
-        'flex items-center select-none hover:opacity-80 transition-opacity duration-200 cursor-pointer', 
-        className
-      )}
-      title="Voltar ao Início"
-    >
+    <div className={`flex items-center justify-center ${className}`}>
       <img 
-        src="/image_84cc9b.png" 
-        alt="Transjordano" 
-        className={cn(
-          "object-contain w-auto", 
-          compact ? "h-10" : "h-14 md:h-16"
-        )}
+        src={logoImg} 
+        alt="Transjordano Logo" 
+        className={compact ? "h-8 w-auto object-contain" : "h-12 w-auto object-contain"} 
       />
-    </Link>
+    </div>
   );
 }
