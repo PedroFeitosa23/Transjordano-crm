@@ -1,4 +1,4 @@
-import { GripVertical, CheckCircle, XCircle, CalendarClock, Flame, EyeOff, Eye, FileSpreadsheet, Download, Upload } from 'lucide-react';
+import { GripVertical, CheckCircle, XCircle, Flame, EyeOff, Eye, FileSpreadsheet, Download, Upload } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { opportunitiesRepo, stagesRepo } from '@/services/repositories';
 import { useAuth } from '@/features/auth/AuthContext';
@@ -6,7 +6,7 @@ import { can } from '@/features/auth/can';
 import { DndContext, closestCorners, PointerSensor, useSensor, useSensors, DragOverlay, useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { currencyBRL, compactBRL, getSlaStatus, dateBR } from '@/lib/format';
+import { currencyBRL, compactBRL } from '@/lib/format';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { toast } from 'sonner';
@@ -45,13 +45,11 @@ function DroppableColumn({ stage, opps, onHideAll, children }) {
 function SortableItem({ opp, stage, onClick, onToggleHide }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: opp.id, data: { type: 'opp', opp } });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : (opp.hidden ? 0.5 : 1) };
-  const slaStatus = getSlaStatus(opp.stageChangedAt, stage?.slaDays);
   const isHighPriority = opp.priority === 'high';
   const hiddenClasses = opp.hidden ? 'bg-gray-50 border-gray-200 grayscale-[0.5]' : 'bg-white border-gray-200 hover:border-transjordano-green-500';
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} onClick={() => onClick(opp)} className={`p-3 rounded-lg shadow-sm border cursor-grab active:cursor-grabbing mb-2 transition-all group relative ${hiddenClasses}`}>
-      <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-lg ${slaStatus === 'good' ? 'bg-transjordano-green' : slaStatus === 'warning' ? 'bg-amber-400' : 'bg-red-500'}`}></div>
       <div className="flex justify-between items-start mb-2 pl-2">
         <div>
           <h4 className={`font-medium text-sm line-clamp-2 leading-tight ${opp.hidden ? 'text-gray-500 line-through' : 'text-gray-800'}`}>{opp.title}</h4>
@@ -66,11 +64,6 @@ function SortableItem({ opp, stage, onClick, onToggleHide }) {
       </div>
       <div className="flex justify-between items-end mt-3 pl-2">
         <span className={`text-sm font-semibold tabular ${opp.hidden ? 'text-gray-500' : 'text-gray-900'}`}>{compactBRL(opp.valueCents)}</span>
-        {opp.nextActivityAt ? (
-           <span className={`text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded font-medium border ${opp.hidden ? 'text-gray-400 bg-gray-100 border-gray-200' : 'text-transjordano-blue-500 bg-blue-50 border-blue-100'}`}><CalendarClock size={10}/> {dateBR(opp.nextActivityAt)}</span>
-        ) : (
-           <span className={`text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded font-medium border ${opp.hidden ? 'text-gray-400 bg-gray-100 border-gray-200' : 'text-red-600 bg-red-50 border-red-100'}`}>Sem Ação</span>
-        )}
       </div>
     </div>
   );
@@ -89,7 +82,7 @@ export function PipelinePage() {
   const [opportunities, setOpportunities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeOpp, setActiveOpp] = useState(null);
-  const [activeTab, setActiveTab] = useState('pipeline'); // 'pipeline' ou 'export'
+  const [activeTab, setActiveTab] = useState('pipeline');
   
   const [drawerOpp, setDrawerOpp] = useState(null);
   const [lostModalOpen, setLostModalOpen] = useState(false);
@@ -186,7 +179,6 @@ export function PipelinePage() {
     } catch (err) { setOpportunities(originalOpps); toast.error("Erro."); }
   };
 
-  // Funções de Exportação / Importação CSV para Funil
   const handleExportPipelineCSV = () => {
     if (opportunities.length === 0) {
       toast.error('Não há oportunidades no funil para exportar.');
