@@ -1,4 +1,4 @@
-import { GripVertical, CheckCircle, XCircle, CalendarClock, Flame, EyeOff } from 'lucide-react';
+import { GripVertical, CheckCircle, XCircle, CalendarClock, Flame, EyeOff, Eye } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { opportunitiesRepo, stagesRepo } from '@/services/repositories';
 import { useAuth } from '@/features/auth/AuthContext';
@@ -35,44 +35,50 @@ function DroppableColumn({ stage, opps, children }) {
   );
 }
 
-// Fase 2: Enriched Card
-function SortableItem({ opp, stage, onClick, onHide }) {
+// Fase 2: Enriched Card com Ocultação Parcial
+function SortableItem({ opp, stage, onClick, onToggleHide }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: opp.id, data: { type: 'opp', opp } });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
+  
+  // Se estiver oculto, a opacidade base cai para 50%
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : (opp.hidden ? 0.5 : 1) };
   
   const slaStatus = getSlaStatus(opp.stageChangedAt, stage?.slaDays);
   const isHighPriority = opp.priority === 'high';
 
+  // Classes dinâmicas para o cartão oculto (cinzento) vs normal
+  const hiddenClasses = opp.hidden ? 'bg-gray-50 border-gray-200 grayscale-[0.5]' : 'bg-white border-gray-200 hover:border-transjordano-green-500';
+
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} onClick={() => onClick(opp)} className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 cursor-grab active:cursor-grabbing mb-2 hover:border-transjordano-green-500 transition-colors group relative">
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} onClick={() => onClick(opp)} className={`p-3 rounded-lg shadow-sm border cursor-grab active:cursor-grabbing mb-2 transition-all group relative ${hiddenClasses}`}>
       <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-lg ${slaStatus === 'good' ? 'bg-transjordano-green' : slaStatus === 'warning' ? 'bg-amber-400' : 'bg-red-500'}`}></div>
       
       <div className="flex justify-between items-start mb-2 pl-2">
         <div>
-          <h4 className="font-medium text-sm text-gray-800 line-clamp-2 leading-tight">{opp.title}</h4>
+          {/* Título riscado se estiver oculto */}
+          <h4 className={`font-medium text-sm line-clamp-2 leading-tight ${opp.hidden ? 'text-gray-500 line-through' : 'text-gray-800'}`}>{opp.title}</h4>
           <p className="text-xs text-gray-500 mt-1 truncate">{opp.origin ? `${opp.origin} -> ${opp.destination}` : 'Logística'}</p>
         </div>
         
-        {/* BOTÃO DE OCULTAR E CHAMA */}
+        {/* BOTÃO ALTERNÁVEL: OCULTAR / DESOCULTAR */}
         <div className="flex gap-1.5 items-center">
           {isHighPriority && <Flame size={14} className="text-orange-500 shrink-0 mt-0.5" />}
           <button 
-            onClick={(e) => onHide(opp.id, e)} 
-            className="text-gray-300 hover:text-gray-600 transition-colors opacity-0 group-hover:opacity-100 z-10"
-            title="Ocultar do Painel"
+            onClick={(e) => onToggleHide(opp, e)} 
+            className={`transition-colors z-10 ${opp.hidden ? 'text-transjordano-blue-500 hover:text-transjordano-blue-700 opacity-100' : 'text-gray-300 hover:text-gray-600 opacity-0 group-hover:opacity-100'}`}
+            title={opp.hidden ? "Desocultar" : "Ocultar do Painel"}
           >
-            <EyeOff size={14} />
+            {opp.hidden ? <Eye size={16} /> : <EyeOff size={14} />}
           </button>
         </div>
       </div>
       
       <div className="flex justify-between items-end mt-3 pl-2">
-        <span className="text-sm font-semibold text-gray-900 tabular">{compactBRL(opp.valueCents)}</span>
+        <span className={`text-sm font-semibold tabular ${opp.hidden ? 'text-gray-500' : 'text-gray-900'}`}>{compactBRL(opp.valueCents)}</span>
         
         {opp.nextActivityAt ? (
-           <span className="text-[10px] flex items-center gap-1 text-transjordano-blue-500 bg-blue-50 px-1.5 py-0.5 rounded font-medium border border-blue-100"><CalendarClock size={10}/> {dateBR(opp.nextActivityAt)}</span>
+           <span className={`text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded font-medium border ${opp.hidden ? 'text-gray-400 bg-gray-100 border-gray-200' : 'text-transjordano-blue-500 bg-blue-50 border-blue-100'}`}><CalendarClock size={10}/> {dateBR(opp.nextActivityAt)}</span>
         ) : (
-           <span className="text-[10px] flex items-center gap-1 text-red-600 bg-red-50 px-1.5 py-0.5 rounded font-medium border border-red-100">Sem Ação</span>
+           <span className={`text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded font-medium border ${opp.hidden ? 'text-gray-400 bg-gray-100 border-gray-200' : 'text-red-600 bg-red-50 border-red-100'}`}>Sem Ação</span>
         )}
       </div>
     </div>
@@ -110,7 +116,6 @@ useEffect(() => {
         const oppsData = await opportunitiesRepo.list(filters);
         
         let stagesData = await stagesRepo.list();
-        // ADICIONA A ABA AGENDA caso não exista no Firebase
         if (!stagesData.find(s => s.id === 'agenda')) {
            stagesData.push({ id: 'agenda', title: 'Agenda', name: 'Agenda', order: 2.5, kind: 'open', color: 'blue' });
         }
@@ -122,13 +127,15 @@ useEffect(() => {
     load();
   }, [user]);
 
-  const handleHideOpp = async (id, e) => {
-    e.stopPropagation(); // Evita que a janela de detalhes abra ao clicar no olho
+  // Função atualizada que Alterna entre Ocultar e Desocultar
+  const handleToggleHide = async (opp, e) => {
+    e.stopPropagation(); 
+    const newState = !opp.hidden;
     try {
-      await opportunitiesRepo.update(id, { hidden: true });
-      setOpportunities(prev => prev.map(o => o.id === id ? { ...o, hidden: true } : o));
-      toast.success('Oportunidade ocultada da tela (continua visível no Excel).');
-    } catch(err) { toast.error('Erro ao ocultar'); }
+      await opportunitiesRepo.update(opp.id, { hidden: newState });
+      setOpportunities(prev => prev.map(o => o.id === opp.id ? { ...o, hidden: newState } : o));
+      toast.success(newState ? 'Oportunidade ocultada (translúcida).' : 'Oportunidade restaurada!');
+    } catch(err) { toast.error('Erro ao alterar visualização.'); }
   };
 
   const handleDragStart = (event) => setActiveOpp(opportunities.find(o => o.id === event.active.id));
@@ -189,12 +196,11 @@ useEffect(() => {
       <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="flex-1 overflow-x-auto overflow-y-hidden flex gap-4 pb-2 min-h-0">
           {openStages.map(stage => {
-            // AQUI É ONDE FILTRAMOS OS OCULTOS PARA NÃO APARECEREM NA TELA
-            const stageOpps = opportunities.filter(o => o.stageId === stage.id && !o.hidden);
+            // Removemos o filtro de ocultos. Eles agora aparecem na tela, mas desbotados.
+            const stageOpps = opportunities.filter(o => o.stageId === stage.id);
             return (
               <DroppableColumn key={stage.id} stage={stage} opps={stageOpps}>
-                {/* AQUI PASSAMOS A FUNÇÃO DE OCULTAR PARA O CARTÃO */}
-                {stageOpps.map(opp => <SortableItem key={opp.id} opp={opp} stage={stage} onClick={setDrawerOpp} onHide={handleHideOpp} />)}
+                {stageOpps.map(opp => <SortableItem key={opp.id} opp={opp} stage={stage} onClick={setDrawerOpp} onToggleHide={handleToggleHide} />)}
               </DroppableColumn>
             );
           })}
