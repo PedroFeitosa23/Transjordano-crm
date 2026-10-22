@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useLocation, Navigate, useNavigate } from 'react-router-dom';
-import { ShieldCheck, ChevronDown, Search, Download, Plus, Menu, LogOut, X, Sparkles, Flame, Target } from 'lucide-react';
+import { ShieldCheck, ChevronDown, Search, Download, Plus, Menu, LogOut, X, Sparkles } from 'lucide-react';
 import { NAV_ITEMS } from '@/app/nav.config';
 import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
@@ -8,7 +8,7 @@ import { useAuth } from '@/features/auth/AuthContext';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import * as Dialog from '@radix-ui/react-dialog';
 import { toast } from 'sonner';
-import { opportunitiesRepo, leadsRepo } from '@/services/repositories';
+import { leadsRepo } from '@/services/repositories';
 import { exportAllOperationsToExcel } from '@/lib/exportExcel';
 
 export function AppLayout() {
@@ -67,28 +67,6 @@ export function AppLayout() {
             ))}
           </div>
         </div>
-
-        {/* AI SMART WIDGETS */}
-        <div className="px-4 mt-8 space-y-4">
-           {/* Radar Widget */}
-           <div className="bg-transjordano-blue-950/50 rounded-lg p-3 border border-transjordano-blue-800/50">
-              <div className="flex items-center gap-2 mb-2 text-transjordano-blue-200"><Flame size={14} className="text-orange-400"/><span className="text-xs font-bold uppercase tracking-wider">Radar de Ação</span></div>
-              <button onClick={()=>navigate('/funil')} className="text-left w-full text-xs text-transjordano-blue-100 hover:text-white hover:bg-white/5 p-1.5 rounded transition-colors block">
-                <strong className="text-orange-300 block mb-0.5">Renovação Frota</strong> 
-                <span className="opacity-80">Risco de perda alto. Ligar hoje.</span>
-              </button>
-           </div>
-           
-           {/* Meta Widget */}
-           <div className="bg-transjordano-blue-950/50 rounded-lg p-3 border border-transjordano-blue-800/50">
-              <div className="flex items-center justify-between mb-2">
-                 <div className="flex items-center gap-2 text-transjordano-blue-200"><Target size={14} className="text-transjordano-green-400"/><span className="text-xs font-bold uppercase tracking-wider">Meta Q4</span></div>
-                 <span className="text-xs font-bold text-white">25%</span>
-              </div>
-              <div className="w-full bg-transjordano-blue-900 rounded-full h-1.5 mb-1.5"><div className="bg-transjordano-green h-1.5 rounded-full" style={{width: '25%'}}></div></div>
-              <p className="text-[10px] text-transjordano-blue-300"><span className="text-purple-300 font-medium">IA Previsão:</span> 85% de atingimento.</p>
-           </div>
-        </div>
       </>
     );
   };
@@ -97,9 +75,14 @@ export function AppLayout() {
     <div className="flex h-dvh bg-gray-50 font-sans overflow-hidden">
       <aside className="w-64 bg-[#002b5c] text-white flex flex-col justify-between hidden lg:flex shrink-0">
         <div className="flex-1 flex flex-col min-h-0">
-          {/* LOGO COMPACTA NO MENU LATERAL */}
-          <div className="p-6 flex items-center justify-center border-b border-gray-700/50 bg-[#002046]/30 shrink-0">
-             <Logo className="[&_span]:text-white" />
+          {/* LOGO DESTACADA E CLICÁVEL */}
+          <div className="p-4 flex items-center justify-center border-b border-gray-700/50 bg-[#002046]/30 shrink-0">
+             <button 
+               onClick={() => navigate('/')} 
+               className="bg-white px-4 py-3 rounded-xl shadow-md hover:scale-105 transition-transform w-full flex justify-center cursor-pointer"
+             >
+               <Logo />
+             </button>
           </div>
           <nav className="p-4 flex-1 overflow-y-auto custom-scrollbar"><NavLinks /></nav>
         </div>
@@ -134,7 +117,12 @@ export function AppLayout() {
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40 lg:hidden animate-in fade-in" />
           <Dialog.Content className="fixed inset-y-0 left-0 w-3/4 max-w-sm bg-[#002b5c] text-white shadow-xl z-50 flex flex-col focus:outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-left">
             <div className="p-4 flex items-center justify-between border-b border-gray-700/50 bg-[#002046]/30">
-              <Logo className="[&_span]:text-white" />
+              <button 
+                onClick={() => { setMobileOpen(false); navigate('/'); }} 
+                className="bg-white px-3 py-1.5 rounded-lg shadow-sm hover:scale-105 transition-transform cursor-pointer"
+              >
+                <Logo compact />
+              </button>
               <button onClick={() => setMobileOpen(false)} className="p-2 text-gray-400 hover:text-white"><X size={24}/></button>
             </div>
             <nav className="p-4 flex-1 overflow-y-auto custom-scrollbar"><NavLinks onClick={() => setMobileOpen(false)} /></nav>
