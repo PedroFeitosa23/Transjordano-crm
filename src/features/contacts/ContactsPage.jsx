@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { leadsRepo, opportunitiesRepo } from '@/services/repositories';
-import { Users, Phone, Mail, Building2, ArrowRightLeft, Plus, X } from 'lucide-react';
+import { Users, Phone, Mail, Building2, ArrowRightLeft, Plus, X, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -27,11 +27,15 @@ export function ContactsPage() {
 
   const handleMoveToFunnel = async (lead) => {
     try {
+      // Converte o valor em reais (armazenado nos notes ou padrão 0) para centavos
+      const valueReais = parseFloat(lead.value) || 0;
+      const valueCents = Math.round(valueReais * 100);
+
       await opportunitiesRepo.create({
         title: `Negociação - ${lead.name}`,
         contactId: lead.id,
-        valueCents: 0,
-        stageId: 's1', // ID correto para a primeira coluna
+        valueCents: valueCents,
+        stageId: 's1', // ID da primeira coluna (Prospecção)
         status: 'open',
         priority: 'medium',
         ownerId: lead.ownerId || 'admin123',
@@ -49,6 +53,8 @@ export function ContactsPage() {
   const handleCreateLead = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
+    const rawValue = fd.get('value') ? parseFloat(fd.get('value').replace(',', '.')) : 0;
+    
     try {
       const newLead = await leadsRepo.create({
         name: fd.get('name'),
@@ -56,12 +62,13 @@ export function ContactsPage() {
         email: fd.get('email'),
         source: fd.get('source'),
         score: parseInt(fd.get('score')) || 50,
+        value: rawValue, // Guarda o valor inserido
         status: 'new',
         ownerId: 'admin123',
         notes: fd.get('notes')
       });
       setLeads(prev => [...prev, newLead]);
-      toast.success('Empresa registrada com sucesso!');
+      toast.success('Empresa e valor registrados com sucesso!');
       setCreateOpen(false);
     } catch(e) { toast.error('Erro ao criar lead.'); }
   };
@@ -117,6 +124,12 @@ export function ContactsPage() {
                   <input type="number" name="score" defaultValue="50" min="0" max="100" className="w-full border rounded-lg px-3 py-2"/>
                 </div>
                 <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                    <DollarSign size={16} className="text-transjordano-green-600"/> Valor Estimado do Contrato/Frete (R$)
+                  </label>
+                  <input type="number" step="0.01" name="value" className="w-full border rounded-lg px-3 py-2" placeholder="Ex: 15000.00"/>
+                </div>
+                <div className="col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Observações / Perfil de Carga</label>
                   <textarea name="notes" rows="3" className="w-full border rounded-lg px-3 py-2 resize-none" placeholder="Detalhes da frota atual, tipo de produtos, etc..."></textarea>
                 </div>
@@ -139,6 +152,7 @@ export function ContactsPage() {
                 <th className="px-6 py-3">Telefone</th>
                 <th className="px-6 py-3">E-mail</th>
                 <th className="px-6 py-3">Origem</th>
+                <th className="px-6 py-3">Valor Est.</th>
                 <th className="px-6 py-3 text-right">Ações</th>
               </tr>
             </thead>
@@ -151,6 +165,9 @@ export function ContactsPage() {
                   <td className="px-6 py-4"><span className="flex items-center gap-1.5"><Phone size={14} className="text-gray-400"/> {l.phone}</span></td>
                   <td className="px-6 py-4"><span className="flex items-center gap-1.5"><Mail size={14} className="text-gray-400"/> {l.email}</span></td>
                   <td className="px-6 py-4">{l.source || 'Manual'}</td>
+                  <td className="px-6 py-4 font-semibold text-gray-900">
+                    {l.value ? `R$ ${Number(l.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00'}
+                  </td>
                   <td className="px-6 py-4 text-right">
                     <Button 
                       variant="secondary" 
