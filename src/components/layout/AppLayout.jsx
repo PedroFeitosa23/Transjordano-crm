@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation, Navigate, useNavigate } from 'react-router-dom';
-import { ShieldCheck, ChevronDown, Search, Download, Plus, Menu, LogOut, X, Sparkles } from 'lucide-react';
+import { ShieldCheck, ChevronDown, Search, Download, Plus, Menu, LogOut, X, Sparkles, Building2, Briefcase } from 'lucide-react';
 import { NAV_ITEMS } from '@/app/nav.config';
 import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
@@ -8,8 +8,7 @@ import { useAuth } from '@/features/auth/AuthContext';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import * as Dialog from '@radix-ui/react-dialog';
 import { toast } from 'sonner';
-import { leadsRepo } from '@/services/repositories';
-import { exportAllOperationsToExcel } from '@/lib/exportExcel';
+import { leadsRepo, opportunitiesRepo } from '@/services/repositories';
 
 export function AppLayout() {
   const { user, logout } = useAuth();
@@ -19,12 +18,62 @@ export function AppLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
 
+  // Estados para a Busca Global em tempo real
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState({ leads: [], opportunities: [] });
+  const [searching, setSearching] = useState(false);
+
   const currentTitle = NAV_ITEMS.find(i => i.path === location.pathname)?.label || 'Sistema';
 
   if (!user) return <Navigate to="/login" replace />;
 
+  // Efeito para buscar a cada dígito digitado na busca global
+  useEffect(() => {
+    const fetchSearchResults = async () => {
+      if (!searchQuery || searchQuery.trim().length < 2) {
+        setSearchResults({ leads: [], opportunities: [] });
+        return;
+      }
+      setSearching(true);
+      try {
+        const [allLeads, allOpps] = await Promise.all([
+          leadsRepo.list().catch(() => []),
+          opportunitiesRepo.list().catch(() => [])
+        ]);
+
+        const query = searchQuery.toLowerCase();
+        
+        const filteredLeads = allLeads.filter(l => 
+          (l.name && l.name.toLowerCase().includes(query)) ||
+          (l.contactName && l.contactName.toLowerCase().includes(query)) ||
+          (l.phone && l.phone.includes(query)) ||
+          (l.responsible && l.responsible.toLowerCase().includes(query))
+        );
+
+        const filteredOpps = allOpps.filter(o => 
+          (o.title && o.title.toLowerCase().includes(query)) ||
+          (o.negotiationType && o.negotiationType.toLowerCase().includes(query))
+        );
+
+        setSearchResults({ leads: filteredLeads, opportunities: filteredOpps });
+      } catch (err) {
+        console.error("Erro na busca global", err);
+      } finally {
+        setSearching(false);
+      }
+    };
+
+    const timer = setTimeout(fetchSearchResults, 300); // Debounce de 300ms para otimizar
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const handleExport = () => {
-    exportAllOperationsToExcel();
+    // Redireciona ou avisa para usar a aba de exportação dedicada nas telas
+    if (location.pathname.includes('leads') || location.pathname.includes('contatos')) {
+      toast.info('Utilize a aba "Exportação / Excel" na página de Leads.');
+    } else {
+      toast.info('Utilize a aba "Exportação / Excel" na página do Funil de Vendas.');
+    }
   };
 
   const handleQuickCreate = async (e) => {
@@ -39,7 +88,6 @@ export function AppLayout() {
   };
 
   const NavLinks = ({ onClick }) => {
-    // Restrições de cargo removidas - Todos veem todos os menus
     const regularItems = NAV_ITEMS.filter(i => !i.isAi);
     const aiItems = NAV_ITEMS.filter(i => i.isAi);
 
@@ -130,16 +178,80 @@ export function AppLayout() {
         </Dialog.Portal>
       </Dialog.Root>
 
+      {/* Modal da Busca Global reativa a cada dígito */}
       <Dialog.Root open={searchOpen} onOpenChange={setSearchOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50 animate-in fade-in" />
-          <Dialog.Content className="fixed top-[20%] left-[50%] translate-x-[-50%] bg-white rounded-xl shadow-2xl w-[90vw] max-w-lg z-50 overflow-hidden focus:outline-none">
-             <form onSubmit={(e) => { e.preventDefault(); setSearchOpen(false); toast.success('Busca global iniciada...'); navigate('/funil'); }} className="flex items-center p-2 border-b">
+          <Dialog.Content className="fixed top-[15%] left-[50%] translate-x-[-50%] bg-white rounded-xl shadow-2xl w-[90vw] max-w-xl z-50 overflow-hidden focus:outline-none flex flex-col max-h-[70vh]">
+             <div className="flex items-center p-3 border-b bg-gray-50">
                 <Search className="text-gray-400 ml-2" size={20} />
-                <input autoFocus type="text" placeholder="Procurar clientes, negócios ou cargas..." className="w-full p-3 focus:outline-none text-gray-700 bg-transparent" />
-                <Button type="button" variant="ghost" onClick={() => setSearchOpen(false)} className="text-gray-400">Esc</Button>
-             </form>
-             <div className="p-4 bg-gray-50 text-xs text-gray-500">Digite para buscar em toda a base de dados. Pressione Enter para buscar.</div>
+                <input 
+                  autoFocus 
+                  type="text" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Digite o nome do cliente, empresa ou negócio..." 
+                  className="w-full p-2 focus:outline-none text-gray-800 bg-transparent text-sm" 
+                />
+                <Button type="button" variant="ghost" onClick={() => { setSearchOpen(false); setSearchQuery(''); }} className="text-gray-400">Fechar</Button>
+             </div>
+
+             <div className="p-4 overflow-y-auto flex-1 space-y-4">
+                {searching && <p className="text-center text-xs text-gray-400 py-4">A procurar...</p>}
+                
+                {!searching && searchQuery.trim().length >= 2 && searchResults.leads.length === 0 && searchResults.opportunities.length === 0 && (
+                  <p className="text-center text-sm text-gray-500 py-6">Nenhum resultado encontrado para "{searchQuery}".</p>
+                )}
+
+                {searchQuery.trim().length < 2 && (
+                  <p className="text-center text-xs text-gray-400 py-6">Digite pelo menos 2 caracteres para iniciar a busca instantânea...</p>
+                )}
+
+                {searchResults.leads.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-400 uppercase mb-2 flex items-center gap-1"><Building2 size={14}/> Leads e Empresas</h4>
+                    <div className="space-y-1">
+                      {searchResults.leads.map(lead => (
+                        <div 
+                          key={lead.id} 
+                          onClick={() => { setSearchOpen(false); setSearchQuery(''); navigate('/contatos'); }}
+                          className="p-2.5 hover:bg-blue-50 rounded-lg cursor-pointer border border-transparent hover:border-blue-100 flex justify-between items-center transition-all"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-gray-800">{lead.name}</p>
+                            <p className="text-xs text-gray-500">{lead.contactName ? `Contato: ${lead.contactName}` : ''} {lead.phone ? `• ${lead.phone}` : ''}</p>
+                          </div>
+                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-medium">Lead</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {searchResults.opportunities.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase mb-2 flex items-center gap-1"><Briefcase size={14}/> Oportunidades no Funil</h4>
+                    <div className="space-y-1">
+                      {searchResults.opportunities.map(opp => (
+                        <div 
+                          key={opp.id} 
+                          onClick={() => { setSearchOpen(false); setSearchQuery(''); navigate('/funil'); }}
+                          className="p-2.5 hover:bg-emerald-50 rounded-lg cursor-pointer border border-transparent hover:border-emerald-100 flex justify-between items-center transition-all"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-gray-800">{opp.title}</p>
+                            <p className="text-xs text-gray-500">Tipo: {opp.negotiationType || 'Geral'} • R$ {(opp.valueCents/100).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                          </div>
+                          <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-medium">Funil</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+             </div>
+             <div className="p-3 bg-gray-50 border-t text-right">
+                <span className="text-[11px] text-gray-400">Busca reativa em tempo real integrada ao Firebase</span>
+             </div>
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
@@ -171,7 +283,6 @@ export function AppLayout() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input type="text" placeholder="Busca global..." onClick={() => setSearchOpen(true)} className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-transjordano-green-500 focus:ring-1 focus:ring-transjordano-green-500 text-sm w-48 lg:w-64 cursor-pointer" readOnly />
             </div>
-            {/* O botão Exportar agora é visível para qualquer utilizador */}
             <Button variant="secondary" onClick={handleExport} className="hidden sm:flex gap-2"><Download size={16} /> Exportar</Button>
             <Button onClick={() => setCreateOpen(true)} className="gap-2"><Plus size={16} /> Nova</Button>
           </div>
