@@ -24,7 +24,7 @@ function DroppableColumn({ stage, opps, onHideAll, children }) {
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-gray-800 text-sm">{stage.name}</h3>
             {isGanhoOuPerdido && (
-              <button onClick={() => onHideAll(stage.id)} className="text-gray-400 hover:text-gray-700 transition-colors bg-white border rounded px-1" title="Ocultar Todos">
+              <button onClick={() => onHideAll(stage.id)} className="text-gray-400 hover:text-gray-700 transition-colors bg-white border rounded px-1 shadow-sm" title="Ocultar Todos">
                 <EyeOff size={14} />
               </button>
             )}
@@ -33,7 +33,7 @@ function DroppableColumn({ stage, opps, onHideAll, children }) {
         </div>
         <div className="text-xs text-gray-500 font-medium tabular">{currencyBRL(opps.reduce((a,o)=>a+o.valueCents,0))}</div>
       </div>
-      <div className="flex-1 overflow-y-auto p-2">
+      <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
         <SortableContext items={opps.map(o => o.id)} strategy={verticalListSortingStrategy}>
           {children}
         </SortableContext>
@@ -89,6 +89,10 @@ export function PipelinePage() {
   const [pendingLostOppId, setPendingLostOppId] = useState(null);
   const [lostReason, setLostReason] = useState('');
 
+  // Estados para o Modal de confirmação personalizado
+  const [hideAllModalOpen, setHideAllModalOpen] = useState(false);
+  const [pendingHideStageId, setPendingHideStageId] = useState(null);
+
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   useEffect(() => {
@@ -121,10 +125,22 @@ export function PipelinePage() {
     } catch(err) { toast.error('Erro ao alterar visualização.'); }
   };
 
-  const handleHideAllInStage = async (stageId) => {
+  // Abre o modal personalizado em vez do window.confirm
+  const handleHideAllInStage = (stageId) => {
     const oppsToHide = opportunities.filter(o => o.stageId === stageId && !o.hidden);
     if(oppsToHide.length === 0) return;
-    if(!window.confirm('Deseja ocultar todos os cartões visíveis desta coluna?')) return;
+    setPendingHideStageId(stageId);
+    setHideAllModalOpen(true);
+  };
+
+  // Executa a ação após confirmação
+  const confirmHideAll = async () => {
+    if (!pendingHideStageId) return;
+    const stageId = pendingHideStageId;
+    const oppsToHide = opportunities.filter(o => o.stageId === stageId && !o.hidden);
+    setHideAllModalOpen(false);
+    setPendingHideStageId(null);
+
     try {
       await Promise.all(oppsToHide.map(o => opportunitiesRepo.update(o.id, { hidden: true })));
       setOpportunities(prev => prev.map(o => o.stageId === stageId ? { ...o, hidden: true } : o));
@@ -310,6 +326,7 @@ export function PipelinePage() {
         </>
       )}
 
+      {/* MODAL PERSONALIZADO: Motivo de Perda */}
       <Dialog.Root open={lostModalOpen} onOpenChange={setLostModalOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50 animate-in fade-in" />
@@ -321,6 +338,24 @@ export function PipelinePage() {
               </select>
               <div className="flex justify-end gap-2"><Button type="button" variant="ghost" onClick={() => setLostModalOpen(false)}>Cancelar</Button><Button type="submit" variant="danger">Confirmar Perda</Button></div>
             </form>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      {/* MODAL PERSONALIZADO: Confirmar Ocultar Todos */}
+      <Dialog.Root open={hideAllModalOpen} onOpenChange={setHideAllModalOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50 animate-in fade-in" />
+          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-white rounded-xl p-6 shadow-pop w-[90vw] max-w-sm z-50 focus:outline-none text-center">
+            <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <EyeOff size={24} />
+            </div>
+            <Dialog.Title className="text-lg font-bold mb-2 text-gray-900">Ocultar Cartões</Dialog.Title>
+            <p className="text-sm text-gray-500 mb-6">Tem certeza que deseja ocultar todos os cartões visíveis desta coluna? Poderá desocultá-los individualmente depois.</p>
+            <div className="flex justify-center gap-3">
+              <Button type="button" variant="ghost" onClick={() => setHideAllModalOpen(false)}>Cancelar</Button>
+              <Button type="button" onClick={confirmHideAll} className="bg-amber-600 hover:bg-amber-700 text-white border-transparent shadow-sm px-4 py-2 rounded-lg font-medium">Ocultar Tudo</Button>
+            </div>
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
