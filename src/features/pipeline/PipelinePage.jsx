@@ -104,7 +104,7 @@ export function PipelinePage() {
         
         let stagesData = await stagesRepo.list();
         
-        // CORREÇÃO: Remove completamente as abas "Agenda" e "Prospecção" do visual
+        // Remove completamente as abas "Agenda" e "Prospecção" da visualização
         stagesData = stagesData.filter(s => 
           s.id !== 'agenda' && 
           s.name.toLowerCase() !== 'agenda' &&
