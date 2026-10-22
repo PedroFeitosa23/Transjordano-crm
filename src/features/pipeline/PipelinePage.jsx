@@ -103,8 +103,14 @@ export function PipelinePage() {
         const oppsData = await opportunitiesRepo.list(filters);
         
         let stagesData = await stagesRepo.list();
-        // Remove a aba agenda se ela vier do banco
-        stagesData = stagesData.filter(s => s.id !== 'agenda' && s.name.toLowerCase() !== 'agenda');
+        
+        // CORREÇÃO: Remove completamente as abas "Agenda" e "Prospecção" do visual
+        stagesData = stagesData.filter(s => 
+          s.id !== 'agenda' && 
+          s.name.toLowerCase() !== 'agenda' &&
+          s.id !== 's1' &&
+          !s.name.toLowerCase().includes('prospec')
+        );
         
         setStages(stagesData.sort((a,b) => a.order - b.order));
         setOpportunities(oppsData.sort((a,b) => a.position - b.position));
