@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { leadsRepo, opportunitiesRepo } from '@/services/repositories';
-import { Users, Phone, Mail, Building2, ArrowRightLeft, Plus, X, DollarSign } from 'lucide-react';
+import { Users, Phone, Mail, Building2, ArrowRightLeft, Plus, X, DollarSign, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -27,7 +27,6 @@ export function ContactsPage() {
 
   const handleMoveToFunnel = async (lead) => {
     try {
-      // Converte o valor em reais (armazenado nos notes ou padrão 0) para centavos
       const valueReais = parseFloat(lead.value) || 0;
       const valueCents = Math.round(valueReais * 100);
 
@@ -35,7 +34,7 @@ export function ContactsPage() {
         title: `Negociação - ${lead.name}`,
         contactId: lead.id,
         valueCents: valueCents,
-        stageId: 's1', // ID da primeira coluna (Prospecção)
+        stageId: 's1',
         status: 'open',
         priority: 'medium',
         ownerId: lead.ownerId || 'admin123',
@@ -47,6 +46,17 @@ export function ContactsPage() {
       navigate('/funil');
     } catch (e) {
       toast.error('Erro ao mover lead para o funil.');
+    }
+  };
+
+  const handleDeleteLead = async (id, name) => {
+    if (!window.confirm(`Tem certeza que deseja excluir o lead "${name}"?`)) return;
+    try {
+      await leadsRepo.delete(id);
+      setLeads(prev => prev.filter(l => l.id !== id));
+      toast.success('Lead excluído com sucesso!');
+    } catch (e) {
+      toast.error('Erro ao excluir lead.');
     }
   };
 
@@ -62,7 +72,7 @@ export function ContactsPage() {
         email: fd.get('email'),
         source: fd.get('source'),
         score: parseInt(fd.get('score')) || 50,
-        value: rawValue, // Guarda o valor inserido
+        value: rawValue,
         status: 'new',
         ownerId: 'admin123',
         notes: fd.get('notes')
@@ -168,13 +178,21 @@ export function ContactsPage() {
                   <td className="px-6 py-4 font-semibold text-gray-900">
                     {l.value ? `R$ ${Number(l.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00'}
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right space-x-2">
                     <Button 
                       variant="secondary" 
                       onClick={() => handleMoveToFunnel(l)}
                       className="text-xs py-1.5 px-3 gap-1.5 bg-transjordano-green-50 text-transjordano-green-700 hover:bg-transjordano-green-100 hover:text-transjordano-green-800 border border-transjordano-green-200"
                     >
                       <ArrowRightLeft size={14} /> Funil
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => handleDeleteLead(l.id, l.name)}
+                      className="text-xs py-1.5 px-2 text-red-600 hover:bg-red-50 hover:text-red-700"
+                      title="Excluir Lead"
+                    >
+                      <Trash2 size={14} />
                     </Button>
                   </td>
                 </tr>
