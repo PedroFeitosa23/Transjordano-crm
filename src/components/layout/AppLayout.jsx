@@ -18,7 +18,6 @@ export function AppLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
 
-  // Estados para a Busca Global em tempo real e visualização de detalhes
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState({ leads: [], opportunities: [] });
   const [searching, setSearching] = useState(false);
@@ -178,7 +177,6 @@ export function AppLayout() {
         </Dialog.Portal>
       </Dialog.Root>
 
-      {/* MODAL DA BUSCA GLOBAL */}
       <Dialog.Root open={searchOpen} onOpenChange={setSearchOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50 animate-in fade-in" />
@@ -253,7 +251,6 @@ export function AppLayout() {
         </Dialog.Portal>
       </Dialog.Root>
 
-      {/* MODAL DE DETALHES DO LEAD (Abre ao clicar na busca) */}
       <Dialog.Root open={!!selectedLead} onOpenChange={(open) => !open && setSelectedLead(null)}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40 z-[60] animate-in fade-in" />
@@ -287,7 +284,6 @@ export function AppLayout() {
         </Dialog.Portal>
       </Dialog.Root>
 
-      {/* MODAL DE DETALHES DA OPORTUNIDADE (Abre ao clicar na busca) */}
       <Dialog.Root open={!!selectedOpp} onOpenChange={(open) => !open && setSelectedOpp(null)}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40 z-[60] animate-in fade-in" />
