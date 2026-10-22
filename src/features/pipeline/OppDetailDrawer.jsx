@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X, Calendar, DollarSign, Trash2, CheckCircle2 } from 'lucide-react';
+import { X, DollarSign, Trash2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { opportunitiesRepo } from '@/services/repositories';
 import { toast } from 'sonner';
@@ -13,7 +13,6 @@ export function OppDetailDrawer({ opp, stage, open, onOpenChange, onUpdate }) {
     prospectingDate: '',
     endDate: '',
     notes: '',
-    nextActivityAt: '',
     stageId: '',
   });
 
@@ -26,8 +25,7 @@ export function OppDetailDrawer({ opp, stage, open, onOpenChange, onUpdate }) {
         prospectingDate: opp.prospectingDate || '',
         endDate: opp.endDate || '',
         notes: opp.notes || '',
-        nextActivityAt: opp.nextActivityAt ? opp.nextActivityAt.split('T')[0] : '',
-        stageId: opp.stageId || 's1',
+        stageId: opp.stageId || 's2',
       });
     }
   }, [opp]);
@@ -44,7 +42,6 @@ export function OppDetailDrawer({ opp, stage, open, onOpenChange, onUpdate }) {
         prospectingDate: formData.prospectingDate,
         endDate: formData.endDate,
         notes: formData.notes,
-        nextActivityAt: formData.nextActivityAt ? new Date(formData.nextActivityAt).toISOString() : null,
       };
 
       await opportunitiesRepo.update(opp.id, updatedData);
@@ -89,20 +86,11 @@ export function OppDetailDrawer({ opp, stage, open, onOpenChange, onUpdate }) {
               <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" required />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Valor Estimado (R$)</label>
-                <div className="relative">
-                  <DollarSign size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input type="number" step="0.01" value={formData.valueCents} onChange={e => setFormData({...formData, valueCents: e.target.value})} className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Próxima Ação (Agenda)</label>
-                <div className="relative">
-                  <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input type="date" value={formData.nextActivityAt} onChange={e => setFormData({...formData, nextActivityAt: e.target.value})} className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm" />
-                </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Valor Estimado (R$)</label>
+              <div className="relative">
+                <DollarSign size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type="number" step="0.01" value={formData.valueCents} onChange={e => setFormData({...formData, valueCents: e.target.value})} className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm" />
               </div>
             </div>
 
