@@ -94,18 +94,33 @@ export function PipelinePage() {
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  useEffect(() => {
+useEffect(() => {
     async function load() {
       try {
         const filters = can(user, 'view:all_opportunities') ? {} : { ownerId: user.uid };
         const oppsData = await opportunitiesRepo.list(filters);
-        const stagesData = await stagesRepo.list();
+        
+        let stagesData = await stagesRepo.list();
+        // ADICIONA A ABA AGENDA caso não exista no Firebase
+        if (!stagesData.find(s => s.id === 'agenda')) {
+           stagesData.push({ id: 'agenda', title: 'Agenda', order: 2.5, kind: 'open', color: 'blue' });
+        }
+        
         setStages(stagesData.sort((a,b) => a.order - b.order));
         setOpportunities(oppsData.sort((a,b) => a.position - b.position));
       } finally { setLoading(false); }
     }
     load();
   }, [user]);
+
+  const handleHideOpp = async (id, e) => {
+    e.stopPropagation(); // Evita que a janela de detalhes abra ao clicar no olho
+    try {
+      await opportunitiesRepo.update(id, { hidden: true });
+      setOpportunities(prev => prev.map(o => o.id === id ? { ...o, hidden: true } : o));
+      toast.success('Oportunidade ocultada da tela (continua visível no Excel).');
+    } catch(err) { toast.error('Erro ao ocultar'); }
+  };
 
   const handleDragStart = (event) => setActiveOpp(opportunities.find(o => o.id === event.active.id));
 
