@@ -39,8 +39,9 @@ export function AppLayout() {
   };
 
   const NavLinks = ({ onClick }) => {
-    const regularItems = NAV_ITEMS.filter(i => !i.isAi && i.roles.includes(user.role));
-    const aiItems = NAV_ITEMS.filter(i => i.isAi && i.roles.includes(user.role));
+    // Restrições de cargo removidas - Todos veem todos os menus
+    const regularItems = NAV_ITEMS.filter(i => !i.isAi);
+    const aiItems = NAV_ITEMS.filter(i => i.isAi);
 
     return (
       <>
@@ -75,7 +76,6 @@ export function AppLayout() {
     <div className="flex h-dvh bg-gray-50 font-sans overflow-hidden">
       <aside className="w-64 bg-[#002b5c] text-white flex flex-col justify-between hidden lg:flex shrink-0">
         <div className="flex-1 flex flex-col min-h-0">
-          {/* LOGO DESTACADA E CLICÁVEL */}
           <div className="p-4 flex items-center justify-center border-b border-gray-700/50 bg-[#002046]/30 shrink-0">
              <button 
                onClick={() => navigate('/')} 
@@ -95,7 +95,7 @@ export function AppLayout() {
                   <ShieldCheck size={20} className="text-transjordano-green-500 shrink-0" />
                   <div className="flex flex-col truncate">
                     <span className="font-medium text-sm truncate">{user.name}</span>
-                    <span className="text-xs opacity-75 capitalize">{user.role === 'manager' ? 'Gerente' : 'Vendedor'}</span>
+                    <span className="text-xs opacity-75 capitalize">Comercial</span>
                   </div>
                 </div>
                 <ChevronDown size={16} />
@@ -111,7 +111,6 @@ export function AppLayout() {
         </div>
       </aside>
 
-      {/* MOBILE DRAWER */}
       <Dialog.Root open={mobileOpen} onOpenChange={setMobileOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40 lg:hidden animate-in fade-in" />
@@ -131,7 +130,6 @@ export function AppLayout() {
         </Dialog.Portal>
       </Dialog.Root>
 
-      {/* SEARCH MODAL */}
       <Dialog.Root open={searchOpen} onOpenChange={setSearchOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50 animate-in fade-in" />
@@ -146,7 +144,6 @@ export function AppLayout() {
         </Dialog.Portal>
       </Dialog.Root>
 
-      {/* QUICK CREATE MODAL */}
       <Dialog.Root open={createOpen} onOpenChange={setCreateOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50 animate-in fade-in" />
@@ -174,7 +171,8 @@ export function AppLayout() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input type="text" placeholder="Busca global..." onClick={() => setSearchOpen(true)} className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-transjordano-green-500 focus:ring-1 focus:ring-transjordano-green-500 text-sm w-48 lg:w-64 cursor-pointer" readOnly />
             </div>
-            {user.role === 'manager' && <Button variant="secondary" onClick={handleExport} className="hidden sm:flex gap-2"><Download size={16} /> Exportar</Button>}
+            {/* O botão Exportar agora é visível para qualquer utilizador */}
+            <Button variant="secondary" onClick={handleExport} className="hidden sm:flex gap-2"><Download size={16} /> Exportar</Button>
             <Button onClick={() => setCreateOpen(true)} className="gap-2"><Plus size={16} /> Nova</Button>
           </div>
         </header>
