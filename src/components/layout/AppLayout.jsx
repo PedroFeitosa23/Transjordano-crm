@@ -18,16 +18,17 @@ export function AppLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
 
-  // Estados para a Busca Global em tempo real
+  // Estados para a Busca Global em tempo real e visualização de detalhes
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState({ leads: [], opportunities: [] });
   const [searching, setSearching] = useState(false);
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [selectedOpp, setSelectedOpp] = useState(null);
 
   const currentTitle = NAV_ITEMS.find(i => i.path === location.pathname)?.label || 'Sistema';
 
   if (!user) return <Navigate to="/login" replace />;
 
-  // Efeito para buscar a cada dígito digitado na busca global
   useEffect(() => {
     const fetchSearchResults = async () => {
       if (!searchQuery || searchQuery.trim().length < 2) {
@@ -63,12 +64,11 @@ export function AppLayout() {
       }
     };
 
-    const timer = setTimeout(fetchSearchResults, 300); // Debounce de 300ms para otimizar
+    const timer = setTimeout(fetchSearchResults, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
   const handleExport = () => {
-    // Redireciona ou avisa para usar a aba de exportação dedicada nas telas
     if (location.pathname.includes('leads') || location.pathname.includes('contatos')) {
       toast.info('Utilize a aba "Exportação / Excel" na página de Leads.');
     } else {
@@ -178,7 +178,7 @@ export function AppLayout() {
         </Dialog.Portal>
       </Dialog.Root>
 
-      {/* Modal da Busca Global reativa a cada dígito */}
+      {/* MODAL DA BUSCA GLOBAL */}
       <Dialog.Root open={searchOpen} onOpenChange={setSearchOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50 animate-in fade-in" />
@@ -214,14 +214,14 @@ export function AppLayout() {
                       {searchResults.leads.map(lead => (
                         <div 
                           key={lead.id} 
-                          onClick={() => { setSearchOpen(false); setSearchQuery(''); navigate('/contatos'); }}
+                          onClick={() => { setSearchOpen(false); setSearchQuery(''); setSelectedLead(lead); }}
                           className="p-2.5 hover:bg-blue-50 rounded-lg cursor-pointer border border-transparent hover:border-blue-100 flex justify-between items-center transition-all"
                         >
                           <div>
                             <p className="text-sm font-semibold text-gray-800">{lead.name}</p>
                             <p className="text-xs text-gray-500">{lead.contactName ? `Contato: ${lead.contactName}` : ''} {lead.phone ? `• ${lead.phone}` : ''}</p>
                           </div>
-                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-medium">Lead</span>
+                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-medium">Ver Ficha</span>
                         </div>
                       ))}
                     </div>
@@ -235,23 +235,87 @@ export function AppLayout() {
                       {searchResults.opportunities.map(opp => (
                         <div 
                           key={opp.id} 
-                          onClick={() => { setSearchOpen(false); setSearchQuery(''); navigate('/funil'); }}
+                          onClick={() => { setSearchOpen(false); setSearchQuery(''); setSelectedOpp(opp); }}
                           className="p-2.5 hover:bg-emerald-50 rounded-lg cursor-pointer border border-transparent hover:border-emerald-100 flex justify-between items-center transition-all"
                         >
                           <div>
                             <p className="text-sm font-semibold text-gray-800">{opp.title}</p>
                             <p className="text-xs text-gray-500">Tipo: {opp.negotiationType || 'Geral'} • R$ {(opp.valueCents/100).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
                           </div>
-                          <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-medium">Funil</span>
+                          <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-medium">Ver Ficha</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
              </div>
-             <div className="p-3 bg-gray-50 border-t text-right">
-                <span className="text-[11px] text-gray-400">Busca reativa em tempo real integrada ao Firebase</span>
-             </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      {/* MODAL DE DETALHES DO LEAD (Abre ao clicar na busca) */}
+      <Dialog.Root open={!!selectedLead} onOpenChange={(open) => !open && setSelectedLead(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/40 z-[60] animate-in fade-in" />
+          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-white rounded-xl p-6 shadow-pop w-[90vw] max-w-md z-[70] focus:outline-none">
+            {selectedLead && (
+              <>
+                <div className="flex justify-between items-start mb-6 border-b pb-4">
+                  <div>
+                    <Dialog.Title className="text-xl font-bold text-gray-900">{selectedLead.name}</Dialog.Title>
+                    <p className="text-sm text-gray-500 font-medium mt-1">Ficha Completa do Lead</p>
+                  </div>
+                  <button onClick={() => setSelectedLead(null)} className="text-gray-400 hover:text-gray-600 bg-gray-100 rounded-full p-1"><X size={20}/></button>
+                </div>
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+                  <div className="grid grid-cols-2 gap-y-5 gap-x-4">
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Contato</span><p className="text-sm font-medium text-gray-900">{selectedLead.contactName || '-'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Responsável</span><p className="text-sm font-medium text-gray-900">{selectedLead.responsible || '-'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Telefone</span><p className="text-sm font-medium text-gray-900">{selectedLead.phone || '-'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">E-mail</span><p className="text-sm font-medium text-gray-900">{selectedLead.email || '-'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Origem</span><p className="text-sm font-medium text-gray-900">{selectedLead.source || '-'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Valor Estimado</span><p className="text-sm font-bold text-transjordano-green-600">{selectedLead.value ? `R$ ${Number(selectedLead.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00'}</p></div>
+                  </div>
+                  <div className="pt-2">
+                    <span className="text-[11px] font-bold uppercase text-gray-400 block mb-2">Observações</span>
+                    <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100 min-h-[60px] whitespace-pre-wrap">{selectedLead.notes || 'Nenhuma observação registrada.'}</p>
+                  </div>
+                </div>
+              </>
+            )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      {/* MODAL DE DETALHES DA OPORTUNIDADE (Abre ao clicar na busca) */}
+      <Dialog.Root open={!!selectedOpp} onOpenChange={(open) => !open && setSelectedOpp(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/40 z-[60] animate-in fade-in" />
+          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-white rounded-xl p-6 shadow-pop w-[90vw] max-w-md z-[70] focus:outline-none">
+            {selectedOpp && (
+              <>
+                <div className="flex justify-between items-start mb-6 border-b pb-4">
+                  <div>
+                    <Dialog.Title className="text-xl font-bold text-gray-900">{selectedOpp.title}</Dialog.Title>
+                    <p className="text-sm text-gray-500 font-medium mt-1">Detalhes do Funil de Vendas</p>
+                  </div>
+                  <button onClick={() => setSelectedOpp(null)} className="text-gray-400 hover:text-gray-600 bg-gray-100 rounded-full p-1"><X size={20}/></button>
+                </div>
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+                  <div className="grid grid-cols-2 gap-y-5 gap-x-4">
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Valor</span><p className="text-sm font-bold text-transjordano-green-600">{selectedOpp.valueCents ? `R$ ${(selectedOpp.valueCents/100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Carga / Tipo</span><p className="text-sm font-medium text-gray-900">{selectedOpp.negotiationType || '-'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Data Prospecção</span><p className="text-sm font-medium text-gray-900">{selectedOpp.prospectingDate ? new Date(selectedOpp.prospectingDate).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : '-'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Data Término</span><p className="text-sm font-medium text-gray-900">{selectedOpp.endDate ? new Date(selectedOpp.endDate).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : '-'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Status</span><p className="text-sm font-medium uppercase">{selectedOpp.status === 'won' ? 'Ganho' : selectedOpp.status === 'lost' ? 'Perdido' : 'Em Andamento'}</p></div>
+                  </div>
+                  <div className="pt-2">
+                    <span className="text-[11px] font-bold uppercase text-gray-400 block mb-2">Observações</span>
+                    <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100 min-h-[60px] whitespace-pre-wrap">{selectedOpp.notes || 'Nenhuma observação registrada.'}</p>
+                  </div>
+                </div>
+              </>
+            )}
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
