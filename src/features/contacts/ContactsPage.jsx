@@ -34,7 +34,7 @@ export function ContactsPage() {
         title: oppTitle,
         contactId: lead.id,
         valueCents: valueCents,
-        stageId: 's1',
+        stageId: 's2', // CORRIGIDO: Envia direto para a aba de Qualificação (s2)
         status: 'open',
         priority: 'medium',
         ownerId: lead.ownerId || 'admin123',
@@ -121,7 +121,15 @@ export function ContactsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Profissional Responsável</label>
-                  <input name="responsible" defaultValue={editingLead?.responsible || ''} className="w-full border rounded-lg px-3 py-2" placeholder="Ex: Carlos"/>
+                  {/* ALTERADO: Barra rolável com os profissionais definidos */}
+                  <select name="responsible" defaultValue={editingLead?.responsible || ''} className="w-full border rounded-lg px-3 py-2">
+                    <option value="">Selecione o responsável...</option>
+                    <option value="Igor Mariano">Igor Mariano</option>
+                    <option value="Cristiane Pinheiro">Cristiane Pinheiro</option>
+                    <option value="Fabiano Varjão">Fabiano Varjão</option>
+                    <option value="Daniel">Daniel</option>
+                    <option value="Paulo Henrique">Paulo Henrique</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Telefone *</label>
