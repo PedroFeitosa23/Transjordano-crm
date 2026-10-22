@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation, Navigate, useNavigate } from 'react-router-dom';
-import { ShieldCheck, ChevronDown, Search, Download, Plus, Menu, LogOut, X, Sparkles, Building2, Briefcase } from 'lucide-react';
+import { ShieldCheck, ChevronDown, Search, Download, Menu, LogOut, X, Sparkles, Building2, Briefcase } from 'lucide-react';
 import { NAV_ITEMS } from '@/app/nav.config';
 import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
@@ -16,8 +16,8 @@ export function AppLayout() {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
 
+  // Estados para a Busca Global em tempo real e visualização de detalhes
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState({ leads: [], opportunities: [] });
   const [searching, setSearching] = useState(false);
@@ -73,17 +73,6 @@ export function AppLayout() {
     } else {
       toast.info('Utilize a aba "Exportação / Excel" na página do Funil de Vendas.');
     }
-  };
-
-  const handleQuickCreate = async (e) => {
-     e.preventDefault();
-     const fd = new FormData(e.target);
-     try {
-       await leadsRepo.create({ name: fd.get('name'), phone: fd.get('phone'), email: fd.get('email'), score: 50, source: 'Manual', status: 'new', ownerId: user.uid });
-       toast.success('Novo lead registrado!');
-       setCreateOpen(false);
-       navigate('/funil');
-     } catch(e) { toast.error('Erro ao criar lead'); }
   };
 
   const NavLinks = ({ onClick }) => {
@@ -177,6 +166,7 @@ export function AppLayout() {
         </Dialog.Portal>
       </Dialog.Root>
 
+      {/* MODAL DA BUSCA GLOBAL */}
       <Dialog.Root open={searchOpen} onOpenChange={setSearchOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50 animate-in fade-in" />
@@ -251,6 +241,7 @@ export function AppLayout() {
         </Dialog.Portal>
       </Dialog.Root>
 
+      {/* MODAL DE DETALHES DO LEAD (Abre ao clicar na busca) */}
       <Dialog.Root open={!!selectedLead} onOpenChange={(open) => !open && setSelectedLead(null)}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40 z-[60] animate-in fade-in" />
@@ -284,6 +275,7 @@ export function AppLayout() {
         </Dialog.Portal>
       </Dialog.Root>
 
+      {/* MODAL DE DETALHES DA OPORTUNIDADE (Abre ao clicar na busca) */}
       <Dialog.Root open={!!selectedOpp} onOpenChange={(open) => !open && setSelectedOpp(null)}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40 z-[60] animate-in fade-in" />
@@ -316,21 +308,6 @@ export function AppLayout() {
         </Dialog.Portal>
       </Dialog.Root>
 
-      <Dialog.Root open={createOpen} onOpenChange={setCreateOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50 animate-in fade-in" />
-          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-white rounded-xl p-6 shadow-pop w-[90vw] max-w-md z-50 focus:outline-none">
-            <Dialog.Title className="text-lg font-semibold mb-4 text-gray-900">Novo Lead Rápido</Dialog.Title>
-            <form onSubmit={handleQuickCreate} className="space-y-4">
-              <div><label className="block text-sm font-medium mb-1">Nome da Empresa</label><input required name="name" className="w-full border rounded-lg px-3 py-2" placeholder="Ex: Indústria XYZ"/></div>
-              <div><label className="block text-sm font-medium mb-1">Telefone</label><input required name="phone" className="w-full border rounded-lg px-3 py-2" placeholder="Ex: (19) 99999-9999"/></div>
-              <div><label className="block text-sm font-medium mb-1">Email</label><input required type="email" name="email" className="w-full border rounded-lg px-3 py-2" placeholder="Ex: contato@xyz.com"/></div>
-              <div className="flex justify-end gap-2 mt-6"><Button type="button" variant="ghost" onClick={() => setCreateOpen(false)}>Cancelar</Button><Button type="submit">Cadastrar</Button></div>
-            </form>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-
       <div className="flex-1 flex flex-col min-w-0">
         <header className="bg-white shadow-sm px-4 md:px-8 py-4 flex items-center justify-between z-10 shrink-0">
           <div className="flex items-center gap-4">
@@ -344,7 +321,6 @@ export function AppLayout() {
               <input type="text" placeholder="Busca global..." onClick={() => setSearchOpen(true)} className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-transjordano-green-500 focus:ring-1 focus:ring-transjordano-green-500 text-sm w-48 lg:w-64 cursor-pointer" readOnly />
             </div>
             <Button variant="secondary" onClick={handleExport} className="hidden sm:flex gap-2"><Download size={16} /> Exportar</Button>
-            <Button onClick={() => setCreateOpen(true)} className="gap-2"><Plus size={16} /> Nova</Button>
           </div>
         </header>
 
