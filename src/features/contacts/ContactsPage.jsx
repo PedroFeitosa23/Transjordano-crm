@@ -34,7 +34,7 @@ export function ContactsPage() {
         title: oppTitle,
         contactId: lead.id,
         valueCents: valueCents,
-        stageId: 's2', // CORRIGIDO: Envia direto para a aba de Qualificação (s2)
+        stageId: 's2', // Envia direto para a aba de Qualificação (s2)
         status: 'open',
         priority: 'medium',
         ownerId: lead.ownerId || 'admin123',
@@ -121,7 +121,6 @@ export function ContactsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Profissional Responsável</label>
-                  {/* ALTERADO: Barra rolável com os profissionais definidos */}
                   <select name="responsible" defaultValue={editingLead?.responsible || ''} className="w-full border rounded-lg px-3 py-2">
                     <option value="">Selecione o responsável...</option>
                     <option value="Igor Mariano">Igor Mariano</option>
@@ -165,3 +164,44 @@ export function ContactsPage() {
                 <Button type="button" variant="ghost" onClick={() => { setCreateOpen(false); setEditingLead(null); }}>Cancelar</Button>
                 <Button type="submit">{editingLead ? 'Salvar Alterações' : 'Guardar Registo'}</Button>
               </div>
+            </form>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      <Card className="overflow-hidden p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-gray-600">
+            <thead className="bg-gray-50 text-gray-700 text-xs uppercase border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-3">Contato / Empresa</th>
+                <th className="px-6 py-3">Responsável</th>
+                <th className="px-6 py-3">Telefone</th>
+                <th className="px-6 py-3">Valor Est.</th>
+                <th className="px-6 py-3 text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {leads.map(l => (
+                <tr key={l.id} className="hover:bg-gray-50/50">
+                  <td className="px-6 py-4 font-medium text-gray-900">
+                    {l.contactName ? <span className="block font-bold">{l.contactName}</span> : null}
+                    <span className="flex items-center gap-1.5 text-xs text-gray-500"><Building2 size={12} /> {l.name}</span>
+                  </td>
+                  <td className="px-6 py-4">{l.responsible || '-'}</td>
+                  <td className="px-6 py-4"><span className="flex items-center gap-1.5"><Phone size={14} className="text-gray-400"/> {l.phone}</span></td>
+                  <td className="px-6 py-4 font-semibold text-gray-900">{l.value ? `R$ ${Number(l.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00'}</td>
+                  <td className="px-6 py-4 text-right space-x-1">
+                    <Button variant="secondary" onClick={() => handleMoveToFunnel(l)} className="text-xs py-1.5 px-2.5 gap-1 bg-transjordano-green-50 text-transjordano-green-700 hover:bg-transjordano-green-100 border-transjordano-green-200"><ArrowRightLeft size={13} /> Funil</Button>
+                    <Button variant="ghost" onClick={() => { setEditingLead(l); setCreateOpen(true); }} className="text-xs py-1.5 px-2 text-blue-600 hover:bg-blue-50"><Edit2 size={14} /></Button>
+                    <Button variant="ghost" onClick={() => handleDeleteLead(l.id, l.name)} className="text-xs py-1.5 px-2 text-red-600 hover:bg-red-50"><Trash2 size={14} /></Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
