@@ -31,13 +31,21 @@ export function ContactsPage() {
         title: `Negociação - ${lead.name}`,
         contactId: lead.id,
         valueCents: 0,
-        stageId: 'prospecting',
+        stageId: 's1', // CORRIGIDO: Usa o ID correto da 1ª coluna do seu banco de dados
         status: 'open',
         priority: 'medium',
         ownerId: lead.ownerId || 'admin123',
         origin: '',
         destination: '',
       });
+      
+      toast.success(`${lead.name} foi adicionado ao Funil de Vendas!`);
+      navigate('/funil');
+    } catch (e) {
+      toast.error('Erro ao mover lead para o funil.');
+    }
+  };
+  
       
       toast.success(`${lead.name} foi adicionado ao Funil de Vendas!`);
       navigate('/funil');
