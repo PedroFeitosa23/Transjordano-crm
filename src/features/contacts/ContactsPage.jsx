@@ -11,7 +11,7 @@ export function ContactsPage() {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
-  const [editingLead, setEditingLead] = useState(null); // Estado para controlar qual lead está a ser editado
+  const [editingLead, setEditingLead] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,9 +19,7 @@ export function ContactsPage() {
       try {
         const data = await leadsRepo.list();
         setLeads(data);
-      } finally {
-        setLoading(false);
-      }
+      } finally { setLoading(false); }
     }
     load();
   }, []);
@@ -30,35 +28,34 @@ export function ContactsPage() {
     try {
       const valueReais = parseFloat(lead.value) || 0;
       const valueCents = Math.round(valueReais * 100);
+      const oppTitle = lead.contactName ? `${lead.contactName} (${lead.name})` : lead.name;
 
       await opportunitiesRepo.create({
-        title: `Negociação - ${lead.name}`,
+        title: oppTitle,
         contactId: lead.id,
         valueCents: valueCents,
         stageId: 's1',
         status: 'open',
         priority: 'medium',
         ownerId: lead.ownerId || 'admin123',
-        origin: '',
-        destination: '',
+        negotiationType: '',
+        prospectingDate: new Date().toISOString().split('T')[0],
+        endDate: '',
+        notes: lead.notes || '',
       });
       
-      toast.success(`${lead.name} foi adicionado ao Funil de Vendas!`);
+      toast.success(`${oppTitle} adicionado ao Funil!`);
       navigate('/funil');
-    } catch (e) {
-      toast.error('Erro ao mover lead para o funil.');
-    }
+    } catch (e) { toast.error('Erro ao mover lead.'); }
   };
 
   const handleDeleteLead = async (id, name) => {
-    if (!window.confirm(`Tem certeza que deseja excluir o lead "${name}"?`)) return;
+    if (!window.confirm(`Excluir permanentemente o lead "${name}"?`)) return;
     try {
       await leadsRepo.delete(id);
       setLeads(prev => prev.filter(l => l.id !== id));
-      toast.success('Lead excluído com sucesso!');
-    } catch (e) {
-      toast.error('Erro ao excluir lead.');
-    }
+      toast.success('Lead excluído!');
+    } catch (e) { toast.error('Erro ao excluir lead.'); }
   };
 
   const handleSaveLead = async (e) => {
@@ -68,6 +65,8 @@ export function ContactsPage() {
     
     const leadData = {
       name: fd.get('name'),
+      contactName: fd.get('contactName'),
+      responsible: fd.get('responsible'),
       phone: fd.get('phone'),
       email: fd.get('email'),
       source: fd.get('source'),
@@ -78,49 +77,27 @@ export function ContactsPage() {
 
     try {
       if (editingLead) {
-        // Atualiza lead existente
         await leadsRepo.update(editingLead.id, leadData);
         setLeads(prev => prev.map(l => l.id === editingLead.id ? { ...l, ...leadData } : l));
-        toast.success('Lead atualizado com sucesso!');
+        toast.success('Lead atualizado!');
       } else {
-        // Cria novo lead
-        const newLead = await leadsRepo.create({
-          ...leadData,
-          status: 'new',
-          ownerId: 'admin123',
-        });
+        const newLead = await leadsRepo.create({ ...leadData, status: 'new', ownerId: 'admin123' });
         setLeads(prev => [...prev, newLead]);
-        toast.success('Empresa registrada com sucesso!');
+        toast.success('Lead registrado!');
       }
       setCreateOpen(false);
       setEditingLead(null);
-    } catch(e) { 
-      toast.error('Erro ao salvar lead.'); 
-    }
+    } catch(e) { toast.error('Erro ao salvar lead.'); }
   };
-
-  const openCreateModal = () => {
-    setEditingLead(null);
-    setCreateOpen(true);
-  };
-
-  const openEditModal = (lead) => {
-    setEditingLead(lead);
-    setCreateOpen(true);
-  };
-
-  if (loading) return <div className="animate-pulse h-64 bg-gray-200 rounded-xl"></div>;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Users className="text-transjordano-blue-800" size={24} /> Leads & Contatos
-          </h2>
-          <p className="text-sm text-gray-500">Gestão de leads e parceiros comerciais da Transjordano.</p>
+          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2"><Users className="text-transjordano-blue-800" size={24} /> Leads & Contatos</h2>
+          <p className="text-sm text-gray-500">Gestão de leads e parceiros comerciais.</p>
         </div>
-        <Button onClick={openCreateModal} className="gap-2"><Plus size={16} /> Novo Cadastro</Button>
+        <Button onClick={() => { setEditingLead(null); setCreateOpen(true); }} className="gap-2"><Plus size={16} /> Novo Cadastro</Button>
       </div>
 
       <Dialog.Root open={createOpen} onOpenChange={(open) => { setCreateOpen(open); if(!open) setEditingLead(null); }}>
@@ -128,17 +105,23 @@ export function ContactsPage() {
           <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50 animate-in fade-in" />
           <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-white rounded-xl shadow-2xl w-[90vw] max-w-2xl z-50 flex flex-col max-h-[90vh]">
             <div className="p-6 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
-              <Dialog.Title className="text-lg font-bold text-gray-900">
-                {editingLead ? 'Editar Lead' : 'Cadastrar Nova Empresa (Detalhado)'}
-              </Dialog.Title>
+              <Dialog.Title className="text-lg font-bold text-gray-900">{editingLead ? 'Editar Lead' : 'Cadastrar Nova Empresa'}</Dialog.Title>
               <button onClick={() => { setCreateOpen(false); setEditingLead(null); }} className="text-gray-400 hover:text-gray-600"><X size={20}/></button>
             </div>
             
             <form onSubmit={handleSaveLead} className="p-6 overflow-y-auto space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Empresa *</label>
-                  <input required name="name" defaultValue={editingLead?.name || ''} className="w-full border rounded-lg px-3 py-2" placeholder="Ex: Indústria Química Beta"/>
+                  <input required name="name" defaultValue={editingLead?.name || ''} className="w-full border rounded-lg px-3 py-2" placeholder="Ex: Indústria XYZ"/>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Cliente/Contato</label>
+                  <input name="contactName" defaultValue={editingLead?.contactName || ''} className="w-full border rounded-lg px-3 py-2" placeholder="Ex: João Silva"/>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Profissional Responsável</label>
+                  <input name="responsible" defaultValue={editingLead?.responsible || ''} className="w-full border rounded-lg px-3 py-2" placeholder="Ex: Carlos"/>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Telefone *</label>
@@ -158,18 +141,16 @@ export function ContactsPage() {
                   </select>
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1"><DollarSign size={16} className="text-transjordano-green-600"/> Valor Estimado (R$)</label>
+                  <input type="number" step="0.01" name="value" defaultValue={editingLead?.value || ''} className="w-full border rounded-lg px-3 py-2" placeholder="Ex: 15000.00"/>
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Score (Termômetro 0-100)</label>
                   <input type="number" name="score" defaultValue={editingLead?.score ?? 50} min="0" max="100" className="w-full border rounded-lg px-3 py-2"/>
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                    <DollarSign size={16} className="text-transjordano-green-600"/> Valor Estimado do Contrato/Frete (R$)
-                  </label>
-                  <input type="number" step="0.01" name="value" defaultValue={editingLead?.value || ''} className="w-full border rounded-lg px-3 py-2" placeholder="Ex: 15000.00"/>
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Observações / Perfil de Carga</label>
-                  <textarea name="notes" rows="3" defaultValue={editingLead?.notes || ''} className="w-full border rounded-lg px-3 py-2 resize-none" placeholder="Detalhes da frota atual, tipo de produtos, etc..."></textarea>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Observações Gerais</label>
+                  <textarea name="notes" rows="3" defaultValue={editingLead?.notes || ''} className="w-full border rounded-lg px-3 py-2 resize-none"></textarea>
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
@@ -186,10 +167,9 @@ export function ContactsPage() {
           <table className="w-full text-left text-sm text-gray-600">
             <thead className="bg-gray-50 text-gray-700 text-xs uppercase border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3">Empresa / Nome</th>
+                <th className="px-6 py-3">Contato / Empresa</th>
+                <th className="px-6 py-3">Responsável</th>
                 <th className="px-6 py-3">Telefone</th>
-                <th className="px-6 py-3">E-mail</th>
-                <th className="px-6 py-3">Origem</th>
                 <th className="px-6 py-3">Valor Est.</th>
                 <th className="px-6 py-3 text-right">Ações</th>
               </tr>
@@ -197,40 +177,17 @@ export function ContactsPage() {
             <tbody className="divide-y divide-gray-100">
               {leads.map(l => (
                 <tr key={l.id} className="hover:bg-gray-50/50">
-                  <td className="px-6 py-4 font-medium text-gray-900 flex items-center gap-2">
-                    <Building2 size={16} className="text-gray-400" /> {l.name}
+                  <td className="px-6 py-4 font-medium text-gray-900">
+                    {l.contactName ? <span className="block font-bold">{l.contactName}</span> : null}
+                    <span className="flex items-center gap-1.5 text-xs text-gray-500"><Building2 size={12} /> {l.name}</span>
                   </td>
+                  <td className="px-6 py-4">{l.responsible || '-'}</td>
                   <td className="px-6 py-4"><span className="flex items-center gap-1.5"><Phone size={14} className="text-gray-400"/> {l.phone}</span></td>
-                  <td className="px-6 py-4"><span className="flex items-center gap-1.5"><Mail size={14} className="text-gray-400"/> {l.email}</span></td>
-                  <td className="px-6 py-4">{l.source || 'Manual'}</td>
-                  <td className="px-6 py-4 font-semibold text-gray-900">
-                    {l.value ? `R$ ${Number(l.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00'}
-                  </td>
+                  <td className="px-6 py-4 font-semibold text-gray-900">{l.value ? `R$ ${Number(l.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00'}</td>
                   <td className="px-6 py-4 text-right space-x-1">
-                    <Button 
-                      variant="secondary" 
-                      onClick={() => handleMoveToFunnel(l)}
-                      className="text-xs py-1.5 px-2.5 gap-1 bg-transjordano-green-50 text-transjordano-green-700 hover:bg-transjordano-green-100 hover:text-transjordano-green-800 border border-transjordano-green-200"
-                      title="Mover para o Funil de Vendas"
-                    >
-                      <ArrowRightLeft size={13} /> Funil
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => openEditModal(l)}
-                      className="text-xs py-1.5 px-2 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                      title="Editar Lead"
-                    >
-                      <Edit2 size={14} />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => handleDeleteLead(l.id, l.name)}
-                      className="text-xs py-1.5 px-2 text-red-600 hover:bg-red-50 hover:text-red-700"
-                      title="Excluir Lead"
-                    >
-                      <Trash2 size={14} />
-                    </Button>
+                    <Button variant="secondary" onClick={() => handleMoveToFunnel(l)} className="text-xs py-1.5 px-2.5 gap-1 bg-transjordano-green-50 text-transjordano-green-700 hover:bg-transjordano-green-100 border-transjordano-green-200"><ArrowRightLeft size={13} /> Funil</Button>
+                    <Button variant="ghost" onClick={() => { setEditingLead(l); setCreateOpen(true); }} className="text-xs py-1.5 px-2 text-blue-600 hover:bg-blue-50"><Edit2 size={14} /></Button>
+                    <Button variant="ghost" onClick={() => handleDeleteLead(l.id, l.name)} className="text-xs py-1.5 px-2 text-red-600 hover:bg-red-50"><Trash2 size={14} /></Button>
                   </td>
                 </tr>
               ))}
