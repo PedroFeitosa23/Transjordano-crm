@@ -1,3 +1,4 @@
+import { GripVertical, CheckCircle, XCircle, CalendarClock, Flame, EyeOff } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { opportunitiesRepo, stagesRepo } from '@/services/repositories';
 import { useAuth } from '@/features/auth/AuthContext';
@@ -6,7 +7,6 @@ import { DndContext, closestCorners, KeyboardSensor, PointerSensor, useSensor, u
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { currencyBRL, compactBRL, getSlaStatus, dateBR } from '@/lib/format';
-import { GripVertical, CheckCircle, XCircle, CalendarClock, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
 import * as Dialog from '@radix-ui/react-dialog';
