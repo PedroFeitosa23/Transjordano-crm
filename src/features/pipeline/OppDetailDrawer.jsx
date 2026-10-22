@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { opportunitiesRepo } from '@/services/repositories';
 import { toast } from 'sonner';
 
-export function OppDetailDrawer({ opp, stage, open, onOpenChange }) {
+export function OppDetailDrawer({ opp, stage, open, onOpenChange, onUpdate }) {
   const [formData, setFormData] = useState({
     title: '',
     valueCents: 0,
@@ -13,6 +13,7 @@ export function OppDetailDrawer({ opp, stage, open, onOpenChange }) {
     destination: '',
     notes: '',
     nextActivityAt: '',
+    stageId: '', // Adicionado para permitir alterar a etapa se necessário
   });
 
   useEffect(() => {
@@ -24,6 +25,7 @@ export function OppDetailDrawer({ opp, stage, open, onOpenChange }) {
         destination: opp.destination || '',
         notes: opp.notes || '',
         nextActivityAt: opp.nextActivityAt ? opp.nextActivityAt.split('T')[0] : '',
+        stageId: opp.stageId || 's1',
       });
     }
   }, [opp]);
@@ -33,17 +35,25 @@ export function OppDetailDrawer({ opp, stage, open, onOpenChange }) {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      await opportunitiesRepo.update(opp.id, {
+      const updatedData = {
         title: formData.title,
         valueCents: Math.round(parseFloat(formData.valueCents || 0) * 100),
         origin: formData.origin,
         destination: formData.destination,
         notes: formData.notes,
         nextActivityAt: formData.nextActivityAt ? new Date(formData.nextActivityAt).toISOString() : null,
-      });
+      };
+
+      await opportunitiesRepo.update(opp.id, updatedData);
       toast.success('Oportunidade atualizada com sucesso!');
       onOpenChange(false);
-      window.location.reload(); // Recarrega para refletir alterações no quadro
+      
+      // Atualiza o estado na tela sem dar reload na página (evita o erro 404 da Vercel)
+      if (onUpdate) {
+        onUpdate({ ...opp, ...updatedData });
+      } else {
+        window.location.href = '/funil'; // Redirecionamento seguro via hash/router
+      }
     } catch (err) {
       toast.error('Erro ao atualizar oportunidade.');
     }
@@ -55,7 +65,7 @@ export function OppDetailDrawer({ opp, stage, open, onOpenChange }) {
       await opportunitiesRepo.delete(opp.id);
       toast.success('Oportunidade excluída com sucesso!');
       onOpenChange(false);
-      window.location.reload();
+      window.location.href = '/funil';
     } catch (err) {
       toast.error('Erro ao excluir oportunidade.');
     }
