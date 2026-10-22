@@ -36,7 +36,7 @@ function DroppableColumn({ stage, opps, children }) {
 }
 
 // Fase 2: Enriched Card
-function SortableItem({ opp, stage, onClick }) {
+function SortableItem({ opp, stage, onClick, onHide }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: opp.id, data: { type: 'opp', opp } });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
   
@@ -45,7 +45,6 @@ function SortableItem({ opp, stage, onClick }) {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} onClick={() => onClick(opp)} className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 cursor-grab active:cursor-grabbing mb-2 hover:border-transjordano-green-500 transition-colors group relative">
-      {/* SLA Indicator Side Bar */}
       <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-lg ${slaStatus === 'good' ? 'bg-transjordano-green' : slaStatus === 'warning' ? 'bg-amber-400' : 'bg-red-500'}`}></div>
       
       <div className="flex justify-between items-start mb-2 pl-2">
@@ -53,13 +52,23 @@ function SortableItem({ opp, stage, onClick }) {
           <h4 className="font-medium text-sm text-gray-800 line-clamp-2 leading-tight">{opp.title}</h4>
           <p className="text-xs text-gray-500 mt-1 truncate">{opp.origin ? `${opp.origin} -> ${opp.destination}` : 'Logística'}</p>
         </div>
-        {isHighPriority && <Flame size={14} className="text-orange-500 shrink-0 mt-0.5" />}
+        
+        {/* BOTÃO DE OCULTAR E CHAMA */}
+        <div className="flex gap-1.5 items-center">
+          {isHighPriority && <Flame size={14} className="text-orange-500 shrink-0 mt-0.5" />}
+          <button 
+            onClick={(e) => onHide(opp.id, e)} 
+            className="text-gray-300 hover:text-gray-600 transition-colors opacity-0 group-hover:opacity-100 z-10"
+            title="Ocultar do Painel"
+          >
+            <EyeOff size={14} />
+          </button>
+        </div>
       </div>
       
       <div className="flex justify-between items-end mt-3 pl-2">
         <span className="text-sm font-semibold text-gray-900 tabular">{compactBRL(opp.valueCents)}</span>
         
-        {/* Next Action Marker */}
         {opp.nextActivityAt ? (
            <span className="text-[10px] flex items-center gap-1 text-transjordano-blue-500 bg-blue-50 px-1.5 py-0.5 rounded font-medium border border-blue-100"><CalendarClock size={10}/> {dateBR(opp.nextActivityAt)}</span>
         ) : (
@@ -103,7 +112,7 @@ useEffect(() => {
         let stagesData = await stagesRepo.list();
         // ADICIONA A ABA AGENDA caso não exista no Firebase
         if (!stagesData.find(s => s.id === 'agenda')) {
-           stagesData.push({ id: 'agenda', title: 'Agenda', order: 2.5, kind: 'open', color: 'blue' });
+           stagesData.push({ id: 'agenda', title: 'Agenda', name: 'Agenda', order: 2.5, kind: 'open', color: 'blue' });
         }
         
         setStages(stagesData.sort((a,b) => a.order - b.order));
@@ -180,10 +189,12 @@ useEffect(() => {
       <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="flex-1 overflow-x-auto overflow-y-hidden flex gap-4 pb-2 min-h-0">
           {openStages.map(stage => {
-            const stageOpps = opportunities.filter(o => o.stageId === stage.id);
+            // AQUI É ONDE FILTRAMOS OS OCULTOS PARA NÃO APARECEREM NA TELA
+            const stageOpps = opportunities.filter(o => o.stageId === stage.id && !o.hidden);
             return (
               <DroppableColumn key={stage.id} stage={stage} opps={stageOpps}>
-                {stageOpps.map(opp => <SortableItem key={opp.id} opp={opp} stage={stage} onClick={setDrawerOpp} />)}
+                {/* AQUI PASSAMOS A FUNÇÃO DE OCULTAR PARA O CARTÃO */}
+                {stageOpps.map(opp => <SortableItem key={opp.id} opp={opp} stage={stage} onClick={setDrawerOpp} onHide={handleHideOpp} />)}
               </DroppableColumn>
             );
           })}
