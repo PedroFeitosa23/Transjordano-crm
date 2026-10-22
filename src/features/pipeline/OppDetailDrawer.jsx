@@ -1,181 +1,177 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X, Building2, MapPin, Package, Calendar, Phone, Mail, Plus } from 'lucide-react';
+import { X, Calendar, DollarSign, FileText, Trash2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { currencyBRL, dateBR, dateTimeBR } from '@/lib/format';
-import { activitiesRepo, contactsRepo } from '@/services/repositories';
+import { opportunitiesRepo } from '@/services/repositories';
 import { toast } from 'sonner';
 
 export function OppDetailDrawer({ opp, stage, open, onOpenChange }) {
-  const [activities, setActivities] = useState([]);
-  const [contact, setContact] = useState(null);
-  const [isAddingNote, setIsAddingNote] = useState(false);
-  const [noteText, setNoteText] = useState('');
-  
+  const [formData, setFormData] = useState({
+    title: '',
+    valueCents: 0,
+    origin: '',
+    destination: '',
+    notes: '',
+    nextActivityAt: '',
+  });
+
   useEffect(() => {
-    if(!opp) return;
-    async function load() {
-      const acts = await activitiesRepo.list({ opportunityId: opp.id });
-      setActivities(acts.sort((a,b) => new Date(b.doneAt) - new Date(a.doneAt)));
-      if (opp.contactId) {
-        try { setContact(await contactsRepo.get(opp.contactId)); } catch(e){}
-      }
+    if (opp) {
+      setFormData({
+        title: opp.title || '',
+        valueCents: opp.valueCents ? opp.valueCents / 100 : 0,
+        origin: opp.origin || '',
+        destination: opp.destination || '',
+        notes: opp.notes || '',
+        nextActivityAt: opp.nextActivityAt ? opp.nextActivityAt.split('T')[0] : '',
+      });
     }
-    load();
-    setIsAddingNote(false);
-    setNoteText('');
   }, [opp]);
 
-  const handleAddNote = async () => {
-    if(!noteText.trim()) return;
-    try {
-      await activitiesRepo.create({ opportunityId: opp.id, type: 'email', summary: noteText, ownerId: opp.ownerId, doneAt: new Date().toISOString() });
-      const acts = await activitiesRepo.list({ opportunityId: opp.id });
-      setActivities(acts.sort((a,b) => new Date(b.doneAt) - new Date(a.doneAt)));
-      setNoteText('');
-      setIsAddingNote(false);
-      toast.success("Nota registada com sucesso!");
-    } catch(e) { toast.error("Erro ao adicionar nota."); }
-  };
-
-  const handleGenerateProposal = () => {
-    const content = `PROPOSTA COMERCIAL\n\nCliente: ${contact?.name || 'Não definido'}\nProjeto: ${opp.title}\nOrigem: ${opp.origin || 'A definir'}\nDestino: ${opp.destination || 'A definir'}\nCarga: ${opp.cargoType || 'Geral'}\nVolume Previsto: ${opp.volumeTonsMonth || 'TBD'} ton/mês\n\nValor Base Estimado: R$ ${(opp.valueCents/100).toFixed(2)}\n\nTransjordano - Segurança em Movimento`;
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `Proposta_${opp.id}.txt`; a.click();
-    toast.success("Proposta comercial exportada!");
-  };
-
   if (!opp) return null;
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    try {
+      await opportunitiesRepo.update(opp.id, {
+        title: formData.title,
+        valueCents: Math.round(parseFloat(formData.valueCents || 0) * 100),
+        origin: formData.origin,
+        destination: formData.destination,
+        notes: formData.notes,
+        nextActivityAt: formData.nextActivityAt ? new Date(formData.nextActivityAt).toISOString() : null,
+      });
+      toast.success('Oportunidade atualizada com sucesso!');
+      onOpenChange(false);
+      window.location.reload(); // Recarrega para refletir alterações no quadro
+    } catch (err) {
+      toast.error('Erro ao atualizar oportunidade.');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Tem certeza que deseja excluir a oportunidade "${opp.title}" do funil?`)) return;
+    try {
+      await opportunitiesRepo.delete(opp.id);
+      toast.success('Oportunidade excluída com sucesso!');
+      onOpenChange(false);
+      window.location.reload();
+    } catch (err) {
+      toast.error('Erro ao excluir oportunidade.');
+    }
+  };
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50 animate-in fade-in" />
-        <Dialog.Content className="fixed inset-y-0 right-0 w-full max-w-lg bg-gray-50 shadow-2xl z-50 flex flex-col focus:outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-right overflow-hidden">
+        <Dialog.Content className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-2xl z-50 flex flex-col focus:outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-right">
           
-          <div className="bg-white px-6 py-4 border-b border-gray-200 flex justify-between items-start shrink-0">
+          {/* Header */}
+          <div className="p-6 border-b flex justify-between items-center bg-gray-50">
             <div>
-              <div className="flex gap-2 mb-2"><Badge variant="info">{stage?.name}</Badge><Badge variant="brand">{opp.priority === 'high' ? 'Alta Prioridade' : 'Normal'}</Badge></div>
-              <Dialog.Title className="text-xl font-bold text-gray-900 leading-tight pr-8">{opp.title}</Dialog.Title>
-              <p className="text-2xl font-bold text-transjordano-green-600 mt-2">{currencyBRL(opp.valueCents)}</p>
+              <span className="text-xs uppercase font-semibold text-transjordano-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100">
+                {stage?.name || 'Etapa do Funil'}
+              </span>
+              <Dialog.Title className="text-xl font-bold text-gray-900 mt-1">{opp.title}</Dialog.Title>
             </div>
-            <button onClick={() => onOpenChange(false)} className="p-2 bg-gray-100 rounded-full text-gray-500 hover:text-gray-900 transition-colors"><X size={20}/></button>
+            <button onClick={() => onOpenChange(false)} className="text-gray-400 hover:text-gray-600 p-1">
+              <X size={20} />
+            </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-             {contact && (
-               <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Cliente</h4>
-                 <div className="flex items-center gap-3 mb-2"><Building2 className="text-transjordano-blue-500" size={18}/><span className="font-semibold text-gray-800">{contact.name}</span></div>
-                 <div className="flex items-center gap-3 text-sm text-gray-600 mb-1"><Phone size={14}/> {contact.phone}</div>
-                 <div className="flex items-center gap-3 text-sm text-gray-600"><Mail size={14}/> {contact.email}</div>
-               </div>
-             )}
-             
-             {/* NOVA ABA / SEÇÃO DE OBSERVAÇÕES */}
-             <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-               <h4 className="text-xs font-bold text-transjordano-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                 Observações e Atualizações
-               </h4>
-               <div className="flex flex-col gap-3">
-                 <textarea 
-                   className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-transjordano-blue-500 focus:ring-1 focus:ring-transjordano-blue-500" 
-                   rows="3" 
-                   placeholder="Escreva uma nova observação, resumo de reunião ou atualização sobre este cliente..."
-                   value={noteText}
-                   onChange={(e) => setNoteText(e.target.value)}
-                 />
-                 <Button 
-                   className="self-end" 
-                   onClick={async () => {
-                     if(!noteText.trim()) return;
-                     setIsAddingNote(true);
-                     try {
-                       await activitiesRepo.create({
-                         opportunityId: opp.id,
-                         type: 'note',
-                         summary: noteText,
-                         doneAt: new Date().toISOString(),
-                         ownerId: opp.ownerId
-                       });
-                       setNoteText('');
-                       const acts = await activitiesRepo.list({ opportunityId: opp.id });
-                       setActivities(acts.sort((a,b) => new Date(b.doneAt) - new Date(a.doneAt)));
-                       toast.success("Observação gravada com sucesso!");
-                     } catch (e) { 
-                       toast.error("Erro ao gravar observação."); 
-                     }
-                     setIsAddingNote(false);
-                   }}
-                   disabled={isAddingNote || !noteText.trim()}
-                 >
-                   Salvar Observação
-                 </Button>
-               </div>
-             </div>
+          {/* Form Body */}
+          <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Título da Negociação</label>
+              <input 
+                type="text" 
+                value={formData.title} 
+                onChange={e => setFormData({...formData, title: e.target.value})} 
+                className="w-full border rounded-lg px-3 py-2 text-sm" 
+                required 
+              />
+            </div>
 
-             <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Detalhes Logísticos (Carga)</h4>
-                 <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-500 text-xs mb-1">Origem</p>
-                      <p className="font-medium text-gray-800 flex items-center gap-1"><MapPin size={14} className="text-gray-400"/> {opp.origin || 'Não definido'}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 text-xs mb-1">Destino</p>
-                      <p className="font-medium text-gray-800 flex items-center gap-1"><MapPin size={14} className="text-gray-400"/> {opp.destination || 'Não definido'}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 text-xs mb-1">Tipo de Carga</p>
-                      <p className="font-medium text-gray-800 flex items-center gap-1"><Package size={14} className="text-gray-400"/> {opp.cargoType || 'Geral'}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500 text-xs mb-1">Volume Previsto</p>
-                      <p className="font-medium text-gray-800">{opp.volumeTonsMonth ? `${opp.volumeTonsMonth} ton/mês` : 'TBD'}</p>
-                    </div>
-                 </div>
-             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Valor Estimado (R$)</label>
+                <div className="relative">
+                  <DollarSign size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    value={formData.valueCents} 
+                    onChange={e => setFormData({...formData, valueCents: e.target.value})} 
+                    className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm" 
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Próxima Agenda / Ação</label>
+                <div className="relative">
+                  <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="date" 
+                    value={formData.nextActivityAt} 
+                    onChange={e => setFormData({...formData, nextActivityAt: e.target.value})} 
+                    className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm" 
+                  />
+                </div>
+              </div>
+            </div>
 
-             <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                 {isAddingNote ? (
-                    <div className="mb-4">
-                       <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Nova Nota / Atividade</h4>
-                       <textarea autoFocus value={noteText} onChange={e=>setNoteText(e.target.value)} className="w-full border border-gray-300 rounded-lg p-3 text-sm mb-3 focus:outline-none focus:border-transjordano-green-500" rows="3" placeholder="Descreva o que aconteceu (reunião, email, negociação)..."></textarea>
-                       <div className="flex justify-end gap-2">
-                          <Button size="sm" variant="ghost" onClick={()=>setIsAddingNote(false)}>Cancelar</Button>
-                          <Button size="sm" onClick={handleAddNote}>Salvar Nota</Button>
-                       </div>
-                    </div>
-                 ) : (
-                    <div className="flex justify-between items-center mb-4">
-                       <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Histórico & Atividades</h4>
-                       <Button size="sm" onClick={()=>setIsAddingNote(true)} variant="ghost" className="h-6 px-2 text-xs text-transjordano-blue-600 bg-blue-50 hover:bg-blue-100"><Plus size={12} className="mr-1"/> Add Nota</Button>
-                    </div>
-                 )}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Origem (Coleta)</label>
+                <input 
+                  type="text" 
+                  value={formData.origin} 
+                  onChange={e => setFormData({...formData, origin: e.target.value})} 
+                  className="w-full border rounded-lg px-3 py-2 text-sm" 
+                  placeholder="Ex: Paulínia - SP"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Destino (Entrega)</label>
+                <input 
+                  type="text" 
+                  value={formData.destination} 
+                  onChange={e => setFormData({...formData, destination: e.target.value})} 
+                  className="w-full border rounded-lg px-3 py-2 text-sm" 
+                  placeholder="Ex: Curitiba - PR"
+                />
+              </div>
+            </div>
 
-                 {activities.length > 0 ? (
-                   <div className="space-y-4 relative before:absolute before:inset-0 before:ml-2 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 before:to-transparent">
-                     {activities.map(act => (
-                       <div key={act.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                          <div className="flex items-center justify-center w-5 h-5 rounded-full border border-white bg-transjordano-blue-100 text-transjordano-blue-600 shrink-0 z-10 font-bold text-[10px]">
-                            {act.type === 'call' ? '📞' : act.type === 'meeting' ? '🤝' : '✉️'}
-                          </div>
-                          <div className="w-[calc(100%-2.5rem)] md:w-[calc(50%-2.5rem)] p-3 rounded-lg border border-gray-100 bg-gray-50 shadow-sm ml-4 md:ml-0 md:mr-4">
-                             <div className="text-xs text-gray-400 mb-1">{dateTimeBR(act.doneAt)}</div>
-                             <div className="text-sm font-medium text-gray-800 whitespace-pre-wrap">{act.summary}</div>
-                          </div>
-                       </div>
-                     ))}
-                   </div>
-                 ) : (!isAddingNote && <p className="text-sm text-gray-500 text-center py-4 border-2 border-dashed border-gray-100 rounded-lg">Nenhuma atividade registada.</p>)}
-             </div>
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Notas e Observações</label>
+              <textarea 
+                rows="4" 
+                value={formData.notes} 
+                onChange={e => setFormData({...formData, notes: e.target.value})} 
+                className="w-full border rounded-lg px-3 py-2 text-sm resize-none" 
+                placeholder="Detalhes sobre a carga, rotas ou negociação..."
+              ></textarea>
+            </div>
 
-          <div className="p-4 bg-white border-t border-gray-200 shrink-0 flex gap-2">
-            <Button className="flex-1" onClick={handleGenerateProposal}>Gerar Proposta</Button>
-          </div>
+            {/* Ações de Rodapé no Drawer */}
+            <div className="pt-6 border-t flex items-center justify-between mt-8">
+              <Button 
+                type="button" 
+                variant="danger" 
+                onClick={handleDelete}
+                className="gap-2 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+              >
+                <Trash2 size={16} /> Excluir Oportunidade
+              </Button>
+
+              <div className="flex gap-2">
+                <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
+                <Button type="submit" className="gap-2"><CheckCircle2 size={16} /> Salvar Alterações</Button>
+              </div>
+            </div>
+          </form>
 
         </Dialog.Content>
       </Dialog.Portal>
