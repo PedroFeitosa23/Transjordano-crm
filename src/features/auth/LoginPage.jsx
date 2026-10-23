@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/services/firebase';
 import { toast } from 'sonner';
 
 export function LoginPage() {
@@ -12,11 +13,11 @@ export function LoginPage() {
     setLoading(true);
     
     try {
-      const auth = getAuth();
       await signInWithEmailAndPassword(auth, email, password);
       toast.success('Sessão iniciada com sucesso!');
     } catch (error) {
-      toast.error('Erro ao entrar. Verifique o e-mail e a palavra-passe.');
+      console.error(error);
+      toast.error('Erro ao entrar. Verifique o e-mail e a senha.');
     } finally {
       setLoading(false);
     }
@@ -46,7 +47,7 @@ export function LoginPage() {
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Palavra-passe</label>
+            <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Senha</label>
             <input 
               type="password" 
               required 
