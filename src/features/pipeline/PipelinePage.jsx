@@ -1,4 +1,4 @@
-import { GripVertical, CheckCircle, XCircle, Flame, EyeOff, Eye, FileSpreadsheet, Download, Upload } from 'lucide-react';
+import { GripVertical, CheckCircle, XCircle, Flame, EyeOff, Eye, FileSpreadsheet, Download, Upload, Clock, AlertCircle } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { opportunitiesRepo, stagesRepo } from '@/services/repositories';
 import { useAuth } from '@/features/auth/AuthContext';
@@ -12,6 +12,23 @@ import { Card } from '@/components/ui/Card';
 import { toast } from 'sonner';
 import * as Dialog from '@radix-ui/react-dialog';
 import { OppDetailDrawer } from './OppDetailDrawer';
+
+// Função auxiliar para calcular e desenhar o SLA
+function getSlaConfig(dateString) {
+  if (!dateString) {
+    return { text: 'Recente', colorClass: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20', Icon: Clock };
+  }
+  
+  const days = Math.floor((new Date() - new Date(dateString)) / (1000 * 60 * 60 * 24));
+  
+  if (days <= 3) {
+    return { text: days === 0 ? 'Hoje' : `${days}d na etapa`, colorClass: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20', Icon: Clock };
+  }
+  if (days <= 7) {
+    return { text: `${days}d na etapa`, colorClass: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20', Icon: Clock };
+  }
+  return { text: `${days}d na etapa`, colorClass: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20', Icon: AlertCircle };
+}
 
 function DroppableColumn({ stage, opps, onHideAll, children }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id, data: { type: 'stage', stage } });
@@ -48,23 +65,34 @@ function SortableItem({ opp, stage, onClick, onToggleHide }) {
   const isHighPriority = opp.priority === 'high';
   
   const hiddenClasses = opp.hidden ? 'bg-app border-border grayscale-[0.5]' : 'bg-surface border-border hover:border-brand-green dark:hover:border-brand-green';
+  const sla = getSlaConfig(opp.stageChangedAt || opp.createdAt);
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} onClick={() => onClick(opp)} className={`p-3 rounded-lg shadow-sm border cursor-grab active:cursor-grabbing mb-2 transition-all duration-200 group relative ${hiddenClasses}`}>
-      <div className="flex justify-between items-start mb-2 pl-2">
-        <div>
-          <h4 className={`font-medium text-sm line-clamp-2 leading-tight ${opp.hidden ? 'text-muted line-through' : 'text-primary'}`}>{opp.title}</h4>
-          <p className="text-xs text-secondary mt-1 truncate">{opp.negotiationType || 'Geral'}</p>
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} onClick={() => onClick(opp)} className={`p-3 rounded-lg shadow-sm border cursor-grab active:cursor-grabbing mb-3 transition-all duration-200 group relative flex flex-col gap-3 ${hiddenClasses}`}>
+      
+      {/* HEADER DO CARD */}
+      <div className="flex justify-between items-start pl-1">
+        <div className="flex-1 pr-2">
+          <h4 className={`font-semibold text-sm line-clamp-2 leading-tight ${opp.hidden ? 'text-muted line-through' : 'text-primary'}`}>{opp.title}</h4>
+          <p className="text-[11px] font-medium text-secondary mt-1 truncate uppercase tracking-wider">{opp.negotiationType || 'Geral'}</p>
         </div>
-        <div className="flex gap-1.5 items-center">
-          {isHighPriority && <Flame size={14} className="text-orange-500 shrink-0 mt-0.5" />}
+        <div className="flex gap-1.5 items-start">
+          {isHighPriority && <Flame size={16} className="text-orange-500 shrink-0" />}
           <button onClick={(e) => onToggleHide(opp, e)} className={`transition-colors z-10 ${opp.hidden ? 'text-transjordano-blue-500 dark:text-blue-400 hover:text-transjordano-blue-700 dark:hover:text-blue-300 opacity-100' : 'text-muted hover:text-primary opacity-0 group-hover:opacity-100'}`} title={opp.hidden ? "Desocultar" : "Ocultar do Painel"}>
             {opp.hidden ? <Eye size={16} /> : <EyeOff size={14} />}
           </button>
         </div>
       </div>
-      <div className="flex justify-between items-end mt-3 pl-2">
-        <span className={`text-sm font-semibold tabular ${opp.hidden ? 'text-muted' : 'text-primary'}`}>{compactBRL(opp.valueCents)}</span>
+
+      {/* FOOTER DO CARD (VALOR E SLA) */}
+      <div className="flex justify-between items-end pl-1 pt-1 border-t border-border/50">
+        <span className={`text-sm font-bold tabular tracking-tight ${opp.hidden ? 'text-muted' : 'text-primary'}`}>{compactBRL(opp.valueCents)}</span>
+        
+        {/* INDICADOR DE SLA PREMIUM */}
+        <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded border ${sla.colorClass} ${opp.hidden ? 'opacity-50 grayscale' : ''}`}>
+          <sla.Icon size={10} strokeWidth={2.5} />
+          <span className="text-[10px] font-bold tracking-wide">{sla.text}</span>
+        </div>
       </div>
     </div>
   );
@@ -178,19 +206,6 @@ export function PipelinePage() {
         await opportunitiesRepo.update(activeId, { stageId: targetStageId, status: novoStatus, stageChangedAt: new Date().toISOString() }, user.uid); 
       } catch (err) { setOpportunities(originalOpps); toast.error("Erro ao mover."); }
     }
-  };
-
-  const handleConfirmLost = async (e) => {
-    e.preventDefault();
-    if(!lostReason) return;
-    const lostStage = stages.find(s => s.kind === 'lost');
-    const originalOpps = [...opportunities];
-    setOpportunities(prev => prev.filter(o => o.id !== pendingLostOppId));
-    setLostModalOpen(false); toast.info("Negócio perdido.");
-    try {
-      await opportunitiesRepo.update(pendingLostOppId, { status: 'lost', stageId: lostStage?.id || 's6', lostReason, closedAt: new Date().toISOString(), stageChangedAt: new Date().toISOString() }, user.uid);
-      setLostReason('');
-    } catch (err) { setOpportunities(originalOpps); toast.error("Erro."); }
   };
 
   const handleExportPipelineCSV = () => {
