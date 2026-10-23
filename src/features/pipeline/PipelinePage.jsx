@@ -250,4 +250,101 @@ export function PipelinePage() {
       try {
         const text = event.target.result;
         const lines = text.split('\n').filter(l => l.trim() !== '');
-        if (lines.length < 2)
+        if (lines.length < 2) {
+          toast.error('Arquivo CSV vazio ou inválido.');
+          return;
+        }
+        let count = 0;
+        const firstStageId = stages[0]?.id || 's2';
+        for (let i = 1; i < lines.length; i++) {
+          const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+          if (cols.length >= 1) {
+            const clean = (val) => val ? val.trim().replace(/^"(.*)"$/, '').replace(/""/g, '"') : '';
+            const valReais = parseFloat(cols[1]) || 0;
+            const oppData = {
+              title: clean(cols[0]) || 'Negociação Importada',
+              valueCents: Math.round(valReais * 100),
+              negotiationType: clean(cols[2]),
+              prospectingDate: clean(cols[3]) || new Date().toISOString().split('T')[0],
+              endDate: clean(cols[4]),
+              status: clean(cols[5]) || 'open',
+              notes: clean(cols[6]),
+              stageId: firstStageId,
+              priority: 'medium',
+              ownerId: user.uid || 'admin123'
+            };
+            const created = await opportunitiesRepo.create(oppData);
+            setOpportunities(prev => [...prev, created]);
+            count++;
+          }
+        }
+        toast.success(`${count} oportunidades importadas para o funil!`);
+        setActiveTab('pipeline');
+      } catch (err) {
+        toast.error('Erro ao processar o arquivo CSV do funil.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  if (loading) return <div className="animate-pulse flex gap-4 h-full p-4">{[1,2,3].map(i => <div key={i} className="w-80 h-96 bg-surface border border-border rounded-xl"></div>)}</div>;
+
+  return (
+    <div className="flex flex-col flex-1 min-h-0 h-full">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-primary">Pipeline de Vendas</h2>
+        <div className="bg-gray-100 dark:bg-slate-800 p-1 rounded-lg flex gap-1 border border-border">
+          <button onClick={() => setActiveTab('pipeline')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'pipeline' ? 'bg-surface shadow text-primary' : 'text-secondary hover:text-primary'}`}>Quadro do Funil</button>
+          <button onClick={() => setActiveTab('export')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1 ${activeTab === 'export' ? 'bg-surface shadow text-primary' : 'text-secondary hover:text-primary'}`}>
+            <FileSpreadsheet size={14} /> Exportação / Excel
+          </button>
+        </div>
+      </div>
+
+      {activeTab === 'export' ? (
+        <Card className="p-8 max-w-xl mx-auto space-y-6 text-center mt-6 bg-surface border-border">
+          <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto">
+            <FileSpreadsheet size={24} />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-primary">Exportar ou Importar Funil de Vendas</h3>
+            <p className="text-sm text-secondary mt-1">Baixe um relatório em Excel (CSV) das negociações atuais ou importe novos dados diretamente.</p>
+          </div>
+          <div className="flex flex-col gap-4 pt-4 border-t border-border">
+            <Button onClick={handleExportPipelineCSV} className="gap-2 justify-center bg-emerald-600 hover:bg-emerald-700 text-white">
+              <Download size={16} /> Exportar Funil para Excel (.CSV)
+            </Button>
+            <div className="relative">
+              <input type="file" accept=".csv" onChange={handleImportPipelineCSV} className="absolute inset-0 opacity-0 cursor-pointer w-full" id="import-pipeline" />
+              <label htmlFor="import-pipeline" className="flex items-center justify-center gap-2 w-full border border-border hover:bg-gray-50 dark:hover:bg-slate-700/50 text-primary font-medium py-2 px-4 rounded-lg cursor-pointer transition-colors text-sm">
+                <Upload size={16} /> Importar Oportunidades para o Funil (.CSV)
+              </label>
+            </div>
+          </div>
+        </Card>
+      ) : (
+        <>
+          <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+            <div className="flex-1 overflow-x-auto overflow-y-hidden flex gap-4 pb-2 min-h-0">
+              {stages.map(stage => {
+                const stageOpps = opportunities.filter(o => o.stageId === stage.id);
+                return (
+                  <DroppableColumn key={stage.id} stage={stage} opps={stageOpps} onHideAll={handleHideAllInStage}>
+                    {stageOpps.map(opp => <SortableItem key={opp.id} opp={opp} stage={stage} onClick={setDrawerOpp} onToggleHide={handleToggleHide} />)}
+                  </DroppableColumn>
+                );
+              })}
+            </div>
+            {activeOpp && (
+              <div className="h-24 mt-4 flex gap-4 animate-in slide-in-from-bottom-4 fade-in">
+                <ResolutionZone id="zone-won" label="Solte aqui para GANHO" icon={CheckCircle} colorClass="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 text-emerald-700 dark:text-emerald-400" />
+                <ResolutionZone id="zone-lost" label="Solte aqui para PERDIDO" icon={XCircle} colorClass="bg-red-50 dark:bg-red-900/20 border-red-500 text-red-700 dark:text-red-400" />
+              </div>
+            )}
+            <DragOverlay>{activeOpp ? <div className="bg-surface p-3 rounded-lg shadow-xl border-2 border-transjordano-blue-500 opacity-95 rotate-2 w-80"><h4 className="font-medium text-sm text-primary">{activeOpp.title}</h4></div> : null}</DragOverlay>
+          </DndContext>
+        </>
+      )}
+
+      <Dialog.Root open={lostModalOpen} onOpenChange={setLostModalOpen}>
+        <Dialog
