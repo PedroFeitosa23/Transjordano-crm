@@ -347,4 +347,40 @@ export function PipelinePage() {
       )}
 
       <Dialog.Root open={lostModalOpen} onOpenChange={setLostModalOpen}>
-        <Dialog
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/40 dark:bg-black/60 z-50 animate-in fade-in" />
+          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-surface border border-transparent dark:border-slate-700 rounded-xl p-6 shadow-pop w-[90vw] max-w-md z-50 focus:outline-none">
+            <Dialog.Title className="text-lg font-semibold mb-4 text-primary">Motivo da Perda</Dialog.Title>
+            <form onSubmit={handleConfirmLost}>
+              <select required value={lostReason} onChange={e => setLostReason(e.target.value)} className="w-full bg-surface text-primary border-border rounded-lg px-3 py-2 border mb-6 focus:outline-none focus:border-brand-green">
+                <option value="">Selecione um motivo...</option><option value="Preço">Preço</option><option value="Concorrente">Concorrente</option><option value="Prazo">Prazo</option>
+              </select>
+              <div className="flex justify-end gap-2"><Button type="button" variant="ghost" onClick={() => setLostModalOpen(false)}>Cancelar</Button><Button type="submit" variant="danger">Confirmar Perda</Button></div>
+            </form>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      <Dialog.Root open={hideAllModalOpen} onOpenChange={setHideAllModalOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/40 dark:bg-black/60 z-50 animate-in fade-in" />
+          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-surface border border-transparent dark:border-slate-700 rounded-xl p-6 shadow-pop w-[90vw] max-w-sm z-50 focus:outline-none text-center">
+            <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center mx-auto mb-4">
+              <EyeOff size={24} />
+            </div>
+            <Dialog.Title className="text-lg font-bold mb-2 text-primary">Ocultar Cartões</Dialog.Title>
+            <p className="text-sm text-secondary mb-6">Tem certeza que deseja ocultar todos os cartões visíveis desta coluna? Poderá desocultá-los individualmente depois.</p>
+            <div className="flex justify-center gap-3">
+              <Button type="button" variant="ghost" onClick={() => setHideAllModalOpen(false)}>Cancelar</Button>
+              <Button type="button" onClick={confirmHideAll} className="bg-amber-600 hover:bg-amber-700 text-white border-transparent shadow-sm px-4 py-2 rounded-lg font-medium">Ocultar Tudo</Button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      <OppDetailDrawer opp={drawerOpp} stage={stages.find(s => s.id === drawerOpp?.stageId)} open={!!drawerOpp} onOpenChange={(o) => !o && setDrawerOpp(null)} onUpdate={(updatedOpp) => {
+         setOpportunities(prev => prev.map(o => o.id === updatedOpp.id ? updatedOpp : o));
+      }}/>
+    </div>
+  );
+}
