@@ -244,4 +244,113 @@ export function AppLayout() {
                         >
                           <div>
                             <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{opp.title}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Tipo: {opp.negotiationType || 'Geral'} • R$ {(opp.valueCents/100).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                          </div>
+                          <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded font-medium">Ver Ficha</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+             </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      <Dialog.Root open={!!selectedLead} onOpenChange={(open) => !open && setSelectedLead(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/40 dark:bg-black/60 z-[60] animate-in fade-in" />
+          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-white dark:bg-slate-800 border border-transparent dark:border-slate-700 rounded-xl p-6 shadow-pop w-[90vw] max-w-md z-[70] focus:outline-none">
+            {selectedLead && (
+              <>
+                <div className="flex justify-between items-start mb-6 border-b border-gray-100 dark:border-slate-700 pb-4">
+                  <div>
+                    <Dialog.Title className="text-xl font-bold text-gray-900 dark:text-white">{selectedLead.name}</Dialog.Title>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mt-1">Ficha Completa do Lead</p>
+                  </div>
+                  <button onClick={() => setSelectedLead(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-gray-100 dark:bg-slate-700 rounded-full p-1"><X size={20}/></button>
+                </div>
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+                  <div className="grid grid-cols-2 gap-y-5 gap-x-4">
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Contato</span><p className="text-sm font-medium text-gray-900 dark:text-gray-200">{selectedLead.contactName || '-'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Responsável</span><p className="text-sm font-medium text-gray-900 dark:text-gray-200">{selectedLead.responsible || '-'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Telefone</span><p className="text-sm font-medium text-gray-900 dark:text-gray-200">{selectedLead.phone || '-'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">E-mail</span><p className="text-sm font-medium text-gray-900 dark:text-gray-200">{selectedLead.email || '-'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Origem</span><p className="text-sm font-medium text-gray-900 dark:text-gray-200">{selectedLead.source || '-'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Valor Estimado</span><p className="text-sm font-bold text-transjordano-green-600 dark:text-emerald-400">{selectedLead.value ? `R$ ${Number(selectedLead.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00'}</p></div>
+                  </div>
+                  <div className="pt-2">
+                    <span className="text-[11px] font-bold uppercase text-gray-400 block mb-2">Observações</span>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-slate-900 p-3 rounded-lg border border-gray-100 dark:border-slate-700 min-h-[60px] whitespace-pre-wrap">{selectedLead.notes || 'Nenhuma observação registrada.'}</p>
+                  </div>
+                </div>
+              </>
+            )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      <Dialog.Root open={!!selectedOpp} onOpenChange={(open) => !open && setSelectedOpp(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/40 dark:bg-black/60 z-[60] animate-in fade-in" />
+          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-white dark:bg-slate-800 border border-transparent dark:border-slate-700 rounded-xl p-6 shadow-pop w-[90vw] max-w-md z-[70] focus:outline-none">
+            {selectedOpp && (
+              <>
+                <div className="flex justify-between items-start mb-6 border-b border-gray-100 dark:border-slate-700 pb-4">
+                  <div>
+                    <Dialog.Title className="text-xl font-bold text-gray-900 dark:text-white">{selectedOpp.title}</Dialog.Title>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mt-1">Detalhes do Funil de Vendas</p>
+                  </div>
+                  <button onClick={() => setSelectedOpp(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-gray-100 dark:bg-slate-700 rounded-full p-1"><X size={20}/></button>
+                </div>
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+                  <div className="grid grid-cols-2 gap-y-5 gap-x-4">
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Valor</span><p className="text-sm font-bold text-transjordano-green-600 dark:text-emerald-400">{selectedOpp.valueCents ? `R$ ${(selectedOpp.valueCents/100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Carga / Tipo</span><p className="text-sm font-medium text-gray-900 dark:text-gray-200">{selectedOpp.negotiationType || '-'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Data Prospecção</span><p className="text-sm font-medium text-gray-900 dark:text-gray-200">{selectedOpp.prospectingDate ? new Date(selectedOpp.prospectingDate).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : '-'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Data Término</span><p className="text-sm font-medium text-gray-900 dark:text-gray-200">{selectedOpp.endDate ? new Date(selectedOpp.endDate).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : '-'}</p></div>
+                    <div><span className="text-[11px] font-bold uppercase text-gray-400 block mb-1">Status</span><p className="text-sm font-medium uppercase dark:text-gray-200">{selectedOpp.status === 'won' ? 'Ganho' : selectedOpp.status === 'lost' ? 'Perdido' : 'Em Andamento'}</p></div>
+                  </div>
+                  <div className="pt-2">
+                    <span className="text-[11px] font-bold uppercase text-gray-400 block mb-2">Observações</span>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-slate-900 p-3 rounded-lg border border-gray-100 dark:border-slate-700 min-h-[60px] whitespace-pre-wrap">{selectedOpp.notes || 'Nenhuma observação registrada.'}</p>
+                  </div>
+                </div>
+              </>
+            )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-transparent dark:border-slate-700 px-4 md:px-8 py-4 flex items-center justify-between z-10 shrink-0 transition-colors">
+          <div className="flex items-center gap-4">
+            <button className="lg:hidden p-2 -ml-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-md" onClick={() => setMobileOpen(true)}><Menu size={24} /></button>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white truncate">{currentTitle}</h1>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="relative hidden md:block group">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
+              <input type="text" placeholder="Busca global..." onClick={() => setSearchOpen(true)} className="pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 rounded-lg focus:outline-none focus:border-transjordano-green-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-transjordano-green-500 text-sm w-48 lg:w-64 cursor-pointer text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-colors" readOnly />
+            </div>
+            
+            <button 
+              onClick={() => setIsDark(!isDark)} 
+              className="p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-700 rounded-lg transition-colors border border-transparent dark:border-slate-600"
+              title={isDark ? "Mudar para Claro" : "Mudar para Escuro"}
+            >
+              {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+
+            <Button variant="secondary" onClick={handleExport} className="hidden sm:flex gap-2 dark:bg-slate-700 dark:text-white dark:border-slate-600 dark:hover:bg-slate-600"><Download size={16} /> Exportar</Button>
+          </div>
+        </header>
+
+        <main id="conteudo" className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 max-w-screen-2xl mx-auto w-full flex flex-col">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}
