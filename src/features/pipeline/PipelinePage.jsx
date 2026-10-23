@@ -14,19 +14,12 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { OppDetailDrawer } from './OppDetailDrawer';
 
 function getSlaConfig(dateString) {
-  if (!dateString) {
-    return { text: 'Recente', colorClass: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20', Icon: Clock };
-  }
-  
+  if (!dateString) return { text: 'Recente', borderClass: 'border-l-emerald-500', textClass: 'text-emerald-600 dark:text-emerald-400', Icon: Clock };
   const days = Math.floor((new Date() - new Date(dateString)) / (1000 * 60 * 60 * 24));
   
-  if (days <= 3) {
-    return { text: days === 0 ? 'Hoje' : `${days}d na etapa`, colorClass: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20', Icon: Clock };
-  }
-  if (days <= 7) {
-    return { text: `${days}d na etapa`, colorClass: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20', Icon: Clock };
-  }
-  return { text: `${days}d na etapa`, colorClass: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20', Icon: AlertCircle };
+  if (days <= 3) return { text: days === 0 ? 'Hoje' : `${days}d na etapa`, borderClass: 'border-l-emerald-500', textClass: 'text-emerald-600 dark:text-emerald-400', Icon: Clock };
+  if (days <= 7) return { text: `${days}d na etapa`, borderClass: 'border-l-amber-500', textClass: 'text-amber-600 dark:text-amber-400', Icon: Clock };
+  return { text: `${days}d na etapa`, borderClass: 'border-l-red-500', textClass: 'text-red-600 dark:text-red-400', Icon: AlertCircle };
 }
 
 function DroppableColumn({ stage, opps, onHideAll, children }) {
@@ -67,7 +60,9 @@ function SortableItem({ opp, stage, onClick, onToggleHide }) {
   const sla = getSlaConfig(opp.stageChangedAt || opp.createdAt);
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} onClick={() => onClick(opp)} className={`p-3 rounded-lg shadow-sm border cursor-grab active:cursor-grabbing mb-3 transition-all duration-200 group relative flex flex-col gap-3 ${hiddenClasses}`}>
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} onClick={() => onClick(opp)} 
+         className={`p-3 rounded-lg shadow-sm border-y border-r border-l-4 cursor-grab active:cursor-grabbing mb-3 transition-all duration-200 group relative flex flex-col gap-3 ${hiddenClasses} ${opp.hidden ? 'border-l-gray-400' : sla.borderClass}`}>
+      
       <div className="flex justify-between items-start pl-1">
         <div className="flex-1 pr-2">
           <h4 className={`font-semibold text-sm line-clamp-2 leading-tight ${opp.hidden ? 'text-muted line-through' : 'text-primary'}`}>{opp.title}</h4>
@@ -80,11 +75,12 @@ function SortableItem({ opp, stage, onClick, onToggleHide }) {
           </button>
         </div>
       </div>
+
       <div className="flex justify-between items-end pl-1 pt-1 border-t border-border/50">
         <span className={`text-sm font-bold tabular tracking-tight ${opp.hidden ? 'text-muted' : 'text-primary'}`}>{compactBRL(opp.valueCents)}</span>
-        <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded border ${sla.colorClass} ${opp.hidden ? 'opacity-50 grayscale' : ''}`}>
-          <sla.Icon size={10} strokeWidth={2.5} />
-          <span className="text-[10px] font-bold tracking-wide">{sla.text}</span>
+        <div className={`flex items-center gap-1 ${sla.textClass} ${opp.hidden ? 'opacity-50 grayscale' : ''}`}>
+          <sla.Icon size={12} strokeWidth={2.5} />
+          <span className="text-[11px] font-bold tracking-wide">{sla.text}</span>
         </div>
       </div>
     </div>
