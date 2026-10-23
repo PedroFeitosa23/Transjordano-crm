@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { leadsRepo } from '@/services/repositories';
+import { leadsRepo, opportunitiesRepo } from '@/services/repositories';
 import { useAuth } from '@/features/auth/AuthContext';
 import { can } from '@/features/auth/can';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { toast } from 'sonner';
-import { Building2, FileSpreadsheet, Download, Upload, Plus, Phone, Mail, User, Search, Trash2, MapPin } from 'lucide-react';
+import { Building2, FileSpreadsheet, Download, Upload, Plus, Phone, User, Search, Trash2, ArrowRight } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 
 export function ContactsPage() {
@@ -18,7 +18,6 @@ export function ContactsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   
-  // Estado completo com todos os campos que tínhamos antes + atualizações
   const [formData, setFormData] = useState({ 
     name: '', 
     contactName: '', 
@@ -30,7 +29,6 @@ export function ContactsPage() {
     value: 0 
   });
 
-  // Lista predefinida de responsáveis baseada na sua equipa
   const equipeComercial = [
     "ALEXEI", "EGESIEL", "JORDANO", "DANIEL", "TIAGO", 
     "FREDERICO", "NERY", "CRISTIANE", "BELLODI", "PH", "FABIANO"
@@ -85,6 +83,29 @@ export function ContactsPage() {
       toast.success('Registro excluído.');
     } catch (err) {
       toast.error('Erro ao excluir registro.');
+    }
+  };
+
+  const handleSendToPipeline = async (lead, e) => {
+    e.stopPropagation();
+    if (!confirm(`Deseja enviar a empresa ${lead.name} para o Funil de Vendas?`)) return;
+    
+    try {
+      await opportunitiesRepo.create({
+        title: lead.name,
+        valueCents: lead.value ? Math.round(lead.value * 100) : 0,
+        negotiationType: 'Geral',
+        prospectingDate: new Date().toISOString().split('T')[0],
+        status: 'open',
+        stageId: 's2', 
+        priority: 'medium',
+        ownerId: user.uid || 'admin123',
+        notes: `Contato Original: ${lead.contactName || '-'}\nTelefone: ${lead.phone || '-'}\nResponsável Comercial: ${lead.responsible || '-'}\n\nObservações do Lead:\n${lead.notes || ''}`,
+        createdAt: new Date().toISOString()
+      });
+      toast.success(`${lead.name} enviado para o Funil com sucesso!`);
+    } catch (err) {
+      toast.error('Erro ao enviar para o Funil de Vendas.');
     }
   };
 
@@ -203,7 +224,6 @@ export function ContactsPage() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full space-y-4">
-      {/* HEADER DA PÁGINA */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
@@ -289,11 +309,14 @@ export function ContactsPage() {
                         {lead.source && <span className="text-gray-400 italic hidden md:inline-block">({lead.source})</span>}
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm font-bold text-emerald-600 tabular-nums">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-emerald-600 tabular-nums mr-3">
                         {lead.value ? `R$ ${Number(lead.value).toLocaleString('pt-BR', {minimumFractionDigits: 2})}` : 'R$ 0,00'}
                       </span>
-                      <button onClick={(e) => handleDeleteLead(lead.id, e)} className="text-gray-300 hover:text-red-600 p-1.5 rounded transition-colors" title="Excluir Registro">
+                      <button onClick={(e) => handleSendToPipeline(lead, e)} className="text-gray-600 hover:text-white bg-gray-100 hover:bg-[#002b5c] p-2 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium shadow-sm border border-gray-200 hover:border-[#002b5c]" title="Jogar para o Funil">
+                        <ArrowRight size={14} /> Funil
+                      </button>
+                      <button onClick={(e) => handleDeleteLead(lead.id, e)} className="text-gray-400 hover:text-red-600 p-2 rounded-lg transition-colors" title="Excluir Registro">
                         <Trash2 size={18} />
                       </button>
                     </div>
