@@ -8,14 +8,13 @@ import { toast } from 'sonner';
 import { Building2, FileSpreadsheet, Download, Upload, Plus, Phone, Mail, User, Search, Trash2 } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 
-export function LeadsPage() {
+export function ContactsPage() {
   const { user } = useAuth();
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('list'); // 'list' ou 'import'
+  const [activeTab, setActiveTab] = useState('list');
 
-  // Modal para criar/ver lead individual
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [formData, setFormData] = useState({ name: '', contactName: '', phone: '', email: '', responsible: '', notes: '', value: 0 });
@@ -99,7 +98,6 @@ export function LeadsPage() {
     toast.success('Leads exportados com sucesso!');
   };
 
-  // Importação inteligente suportando TXT (Bloco de Notas) e CSV
   const handleImportFile = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -116,7 +114,7 @@ export function LeadsPage() {
 
         let count = 0;
         const isTxt = file.name.endsWith('.txt');
-        const startIndex = isTxt ? 0 : 1; // Ignora cabeçalho se for CSV
+        const startIndex = isTxt ? 0 : 1; 
 
         for (let i = startIndex; i < lines.length; i++) {
           const cols = isTxt ? lines[i].split('\t') : lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
@@ -126,8 +124,6 @@ export function LeadsPage() {
             let leadData;
 
             if (isTxt) {
-              // Mapeamento exato do seu Bloco de Notas:
-              // Coluna 0: Título | Coluna 1: Ref | Coluna 2: Cliente | Coluna 3: Tipo | Coluna 4: Detalhes | Coluna 6: Responsável
               const titulo = clean(cols[0]);
               const referencia = clean(cols[1]);
               const cliente = clean(cols[2]);
@@ -149,7 +145,6 @@ export function LeadsPage() {
                 createdAt: new Date().toISOString()
               };
             } else {
-              // Formato CSV padrão
               leadData = {
                 name: clean(cols[0]) || 'Empresa Importada',
                 contactName: clean(cols[1]),
@@ -188,7 +183,6 @@ export function LeadsPage() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full space-y-4">
-      {/* HEADER DA PÁGINA */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
@@ -220,7 +214,7 @@ export function LeadsPage() {
           </div>
           <div>
             <h3 className="text-lg font-bold text-gray-900">Importar do Bloco de Notas ou Exportar</h3>
-            <p className="text-sm text-gray-500 mt-1">Carregue o seu ficheiro `.txt` com os 250 registos ou descarregue a base atual em formato CSV.</p>
+            <p className="text-sm text-gray-500 mt-1">Carregue o seu ficheiro `.txt` com os registos ou descarregue a base atual em formato CSV.</p>
           </div>
           <div className="flex flex-col gap-4 pt-4 border-t border-gray-100">
             <Button onClick={handleExportCSV} className="gap-2 justify-center bg-blue-600 hover:bg-blue-700 text-white">
@@ -285,7 +279,6 @@ export function LeadsPage() {
         </div>
       )}
 
-      {/* MODAL CRIAR / EDITAR LEAD */}
       <Dialog.Root open={modalOpen} onOpenChange={setModalOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50 animate-in fade-in" />
