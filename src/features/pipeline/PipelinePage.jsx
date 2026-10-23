@@ -18,20 +18,20 @@ function DroppableColumn({ stage, opps, onHideAll, children }) {
   const isGanhoOuPerdido = stage.name.toLowerCase().includes('ganho') || stage.name.toLowerCase().includes('perdid');
   
   return (
-    <div ref={setNodeRef} className={`flex-shrink-0 w-80 rounded-xl border flex flex-col h-full max-h-full transition-colors ${isOver ? 'bg-transjordano-green-50 border-transjordano-green-300' : 'bg-gray-100/50 border-gray-200'}`}>
-      <div className="p-3 border-b border-gray-200 bg-gray-50/80 rounded-t-xl">
+    <div ref={setNodeRef} className={`flex-shrink-0 w-80 rounded-xl border flex flex-col h-full max-h-full transition-colors duration-200 ${isOver ? 'bg-transjordano-green-50/50 dark:bg-brand-green/10 border-brand-green' : 'bg-gray-100/50 dark:bg-slate-800/40 border-border'}`}>
+      <div className="p-3 border-b border-border bg-gray-50/80 dark:bg-slate-800/80 rounded-t-xl">
         <div className="flex justify-between items-center mb-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-gray-800 text-sm">{stage.name}</h3>
+            <h3 className="font-semibold text-primary text-sm">{stage.name}</h3>
             {isGanhoOuPerdido && (
-              <button onClick={() => onHideAll(stage.id)} className="text-gray-400 hover:text-gray-700 transition-colors bg-white border rounded px-1 shadow-sm" title="Ocultar Todos">
+              <button onClick={() => onHideAll(stage.id)} className="text-muted hover:text-primary transition-colors bg-surface border border-border rounded px-1 shadow-sm" title="Ocultar Todos">
                 <EyeOff size={14} />
               </button>
             )}
           </div>
-          <span className="bg-white text-gray-500 text-xs px-2 py-0.5 rounded-full border font-medium">{opps.length}</span>
+          <span className="bg-surface text-secondary text-xs px-2 py-0.5 rounded-full border border-border font-medium">{opps.length}</span>
         </div>
-        <div className="text-xs text-gray-500 font-medium tabular">{currencyBRL(opps.reduce((a,o)=>a+o.valueCents,0))}</div>
+        <div className="text-xs text-secondary font-medium tabular">{currencyBRL(opps.reduce((a,o)=>a+o.valueCents,0))}</div>
       </div>
       <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
         <SortableContext items={opps.map(o => o.id)} strategy={verticalListSortingStrategy}>
@@ -46,24 +46,25 @@ function SortableItem({ opp, stage, onClick, onToggleHide }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: opp.id, data: { type: 'opp', opp } });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : (opp.hidden ? 0.5 : 1) };
   const isHighPriority = opp.priority === 'high';
-  const hiddenClasses = opp.hidden ? 'bg-gray-50 border-gray-200 grayscale-[0.5]' : 'bg-white border-gray-200 hover:border-transjordano-green-500';
+  
+  const hiddenClasses = opp.hidden ? 'bg-app border-border grayscale-[0.5]' : 'bg-surface border-border hover:border-brand-green dark:hover:border-brand-green';
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} onClick={() => onClick(opp)} className={`p-3 rounded-lg shadow-sm border cursor-grab active:cursor-grabbing mb-2 transition-all group relative ${hiddenClasses}`}>
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} onClick={() => onClick(opp)} className={`p-3 rounded-lg shadow-sm border cursor-grab active:cursor-grabbing mb-2 transition-all duration-200 group relative ${hiddenClasses}`}>
       <div className="flex justify-between items-start mb-2 pl-2">
         <div>
-          <h4 className={`font-medium text-sm line-clamp-2 leading-tight ${opp.hidden ? 'text-gray-500 line-through' : 'text-gray-800'}`}>{opp.title}</h4>
-          <p className="text-xs text-gray-500 mt-1 truncate">{opp.negotiationType || 'Geral'}</p>
+          <h4 className={`font-medium text-sm line-clamp-2 leading-tight ${opp.hidden ? 'text-muted line-through' : 'text-primary'}`}>{opp.title}</h4>
+          <p className="text-xs text-secondary mt-1 truncate">{opp.negotiationType || 'Geral'}</p>
         </div>
         <div className="flex gap-1.5 items-center">
           {isHighPriority && <Flame size={14} className="text-orange-500 shrink-0 mt-0.5" />}
-          <button onClick={(e) => onToggleHide(opp, e)} className={`transition-colors z-10 ${opp.hidden ? 'text-transjordano-blue-500 hover:text-transjordano-blue-700 opacity-100' : 'text-gray-300 hover:text-gray-600 opacity-0 group-hover:opacity-100'}`} title={opp.hidden ? "Desocultar" : "Ocultar do Painel"}>
+          <button onClick={(e) => onToggleHide(opp, e)} className={`transition-colors z-10 ${opp.hidden ? 'text-transjordano-blue-500 dark:text-blue-400 hover:text-transjordano-blue-700 dark:hover:text-blue-300 opacity-100' : 'text-muted hover:text-primary opacity-0 group-hover:opacity-100'}`} title={opp.hidden ? "Desocultar" : "Ocultar do Painel"}>
             {opp.hidden ? <Eye size={16} /> : <EyeOff size={14} />}
           </button>
         </div>
       </div>
       <div className="flex justify-between items-end mt-3 pl-2">
-        <span className={`text-sm font-semibold tabular ${opp.hidden ? 'text-gray-500' : 'text-gray-900'}`}>{compactBRL(opp.valueCents)}</span>
+        <span className={`text-sm font-semibold tabular ${opp.hidden ? 'text-muted' : 'text-primary'}`}>{compactBRL(opp.valueCents)}</span>
       </div>
     </div>
   );
@@ -72,7 +73,7 @@ function SortableItem({ opp, stage, onClick, onToggleHide }) {
 function ResolutionZone({ id, label, icon: Icon, colorClass }) {
   const { setNodeRef, isOver } = useDroppable({ id, data: { type: 'resolution' } });
   return (
-    <div ref={setNodeRef} className={`flex-1 p-4 rounded-xl border-2 border-dashed flex items-center justify-center gap-2 transition-all ${isOver ? colorClass + ' scale-[1.02]' : 'bg-gray-50 border-gray-300 text-gray-500'}`}><Icon size={20} /><span className="font-medium">{label}</span></div>
+    <div ref={setNodeRef} className={`flex-1 p-4 rounded-xl border-2 border-dashed flex items-center justify-center gap-2 transition-all ${isOver ? colorClass + ' scale-[1.02]' : 'bg-surface dark:bg-slate-800 border-border text-secondary'}`}><Icon size={20} /><span className="font-medium">{label}</span></div>
   );
 }
 
@@ -89,7 +90,6 @@ export function PipelinePage() {
   const [pendingLostOppId, setPendingLostOppId] = useState(null);
   const [lostReason, setLostReason] = useState('');
 
-  // Estados para o Modal de confirmação personalizado
   const [hideAllModalOpen, setHideAllModalOpen] = useState(false);
   const [pendingHideStageId, setPendingHideStageId] = useState(null);
 
@@ -125,7 +125,6 @@ export function PipelinePage() {
     } catch(err) { toast.error('Erro ao alterar visualização.'); }
   };
 
-  // Abre o modal personalizado em vez do window.confirm
   const handleHideAllInStage = (stageId) => {
     const oppsToHide = opportunities.filter(o => o.stageId === stageId && !o.hidden);
     if(oppsToHide.length === 0) return;
@@ -133,7 +132,6 @@ export function PipelinePage() {
     setHideAllModalOpen(true);
   };
 
-  // Executa a ação após confirmação
   const confirmHideAll = async () => {
     if (!pendingHideStageId) return;
     const stageId = pendingHideStageId;
@@ -267,36 +265,36 @@ export function PipelinePage() {
     reader.readAsText(file);
   };
 
-  if (loading) return <div className="animate-pulse flex gap-4 h-full p-4">{[1,2,3].map(i => <div key={i} className="w-80 h-96 bg-gray-200 rounded-xl"></div>)}</div>;
+  if (loading) return <div className="animate-pulse flex gap-4 h-full p-4">{[1,2,3].map(i => <div key={i} className="w-80 h-96 bg-surface border border-border rounded-xl"></div>)}</div>;
 
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-800">Pipeline de Vendas</h2>
-        <div className="bg-gray-100 p-1 rounded-lg flex gap-1 border">
-          <button onClick={() => setActiveTab('pipeline')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'pipeline' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}>Quadro do Funil</button>
-          <button onClick={() => setActiveTab('export')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1 ${activeTab === 'export' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}>
+        <h2 className="text-lg font-semibold text-primary">Pipeline de Vendas</h2>
+        <div className="bg-gray-100 dark:bg-slate-800 p-1 rounded-lg flex gap-1 border border-border">
+          <button onClick={() => setActiveTab('pipeline')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'pipeline' ? 'bg-surface shadow text-primary' : 'text-secondary hover:text-primary'}`}>Quadro do Funil</button>
+          <button onClick={() => setActiveTab('export')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1 ${activeTab === 'export' ? 'bg-surface shadow text-primary' : 'text-secondary hover:text-primary'}`}>
             <FileSpreadsheet size={14} /> Exportação / Excel
           </button>
         </div>
       </div>
 
       {activeTab === 'export' ? (
-        <Card className="p-8 max-w-xl mx-auto space-y-6 text-center mt-6">
-          <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+        <Card className="p-8 max-w-xl mx-auto space-y-6 text-center mt-6 bg-surface border-border">
+          <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto">
             <FileSpreadsheet size={24} />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Exportar ou Importar Funil de Vendas</h3>
-            <p className="text-sm text-gray-500 mt-1">Baixe um relatório em Excel (CSV) das negociações atuais ou importe novos dados diretamente.</p>
+            <h3 className="text-lg font-bold text-primary">Exportar ou Importar Funil de Vendas</h3>
+            <p className="text-sm text-secondary mt-1">Baixe um relatório em Excel (CSV) das negociações atuais ou importe novos dados diretamente.</p>
           </div>
-          <div className="flex flex-col gap-4 pt-4 border-t">
+          <div className="flex flex-col gap-4 pt-4 border-t border-border">
             <Button onClick={handleExportPipelineCSV} className="gap-2 justify-center bg-emerald-600 hover:bg-emerald-700 text-white">
               <Download size={16} /> Exportar Funil para Excel (.CSV)
             </Button>
             <div className="relative">
               <input type="file" accept=".csv" onChange={handleImportPipelineCSV} className="absolute inset-0 opacity-0 cursor-pointer w-full" id="import-pipeline" />
-              <label htmlFor="import-pipeline" className="flex items-center justify-center gap-2 w-full border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg cursor-pointer transition-colors text-sm">
+              <label htmlFor="import-pipeline" className="flex items-center justify-center gap-2 w-full border border-border hover:bg-gray-50 dark:hover:bg-slate-700/50 text-primary font-medium py-2 px-4 rounded-lg cursor-pointer transition-colors text-sm">
                 <Upload size={16} /> Importar Oportunidades para o Funil (.CSV)
               </label>
             </div>
@@ -317,11 +315,11 @@ export function PipelinePage() {
             </div>
             {activeOpp && (
               <div className="h-24 mt-4 flex gap-4 animate-in slide-in-from-bottom-4 fade-in">
-                <ResolutionZone id="zone-won" label="Solte aqui para GANHO" icon={CheckCircle} colorClass="bg-emerald-50 border-emerald-500 text-emerald-700" />
-                <ResolutionZone id="zone-lost" label="Solte aqui para PERDIDO" icon={XCircle} colorClass="bg-red-50 border-red-500 text-red-700" />
+                <ResolutionZone id="zone-won" label="Solte aqui para GANHO" icon={CheckCircle} colorClass="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 text-emerald-700 dark:text-emerald-400" />
+                <ResolutionZone id="zone-lost" label="Solte aqui para PERDIDO" icon={XCircle} colorClass="bg-red-50 dark:bg-red-900/20 border-red-500 text-red-700 dark:text-red-400" />
               </div>
             )}
-            <DragOverlay>{activeOpp ? <div className="bg-white p-3 rounded-lg shadow-xl border-2 border-transjordano-blue-500 opacity-95 rotate-2 w-80"><h4 className="font-medium text-sm text-gray-800">{activeOpp.title}</h4></div> : null}</DragOverlay>
+            <DragOverlay>{activeOpp ? <div className="bg-surface p-3 rounded-lg shadow-xl border-2 border-transjordano-blue-500 opacity-95 rotate-2 w-80"><h4 className="font-medium text-sm text-primary">{activeOpp.title}</h4></div> : null}</DragOverlay>
           </DndContext>
         </>
       )}
@@ -329,11 +327,11 @@ export function PipelinePage() {
       {/* MODAL PERSONALIZADO: Motivo de Perda */}
       <Dialog.Root open={lostModalOpen} onOpenChange={setLostModalOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50 animate-in fade-in" />
-          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-white rounded-xl p-6 shadow-pop w-[90vw] max-w-md z-50 focus:outline-none">
-            <Dialog.Title className="text-lg font-semibold mb-4 text-gray-900">Motivo da Perda</Dialog.Title>
+          <Dialog.Overlay className="fixed inset-0 bg-black/40 dark:bg-black/60 z-50 animate-in fade-in" />
+          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-surface border border-transparent dark:border-slate-700 rounded-xl p-6 shadow-pop w-[90vw] max-w-md z-50 focus:outline-none">
+            <Dialog.Title className="text-lg font-semibold mb-4 text-primary">Motivo da Perda</Dialog.Title>
             <form onSubmit={handleConfirmLost}>
-              <select required value={lostReason} onChange={e => setLostReason(e.target.value)} className="w-full border-gray-300 rounded-lg px-3 py-2 border mb-6">
+              <select required value={lostReason} onChange={e => setLostReason(e.target.value)} className="w-full bg-surface text-primary border-border rounded-lg px-3 py-2 border mb-6 focus:outline-none focus:border-brand-green">
                 <option value="">Selecione um motivo...</option><option value="Preço">Preço</option><option value="Concorrente">Concorrente</option><option value="Prazo">Prazo</option>
               </select>
               <div className="flex justify-end gap-2"><Button type="button" variant="ghost" onClick={() => setLostModalOpen(false)}>Cancelar</Button><Button type="submit" variant="danger">Confirmar Perda</Button></div>
@@ -345,13 +343,13 @@ export function PipelinePage() {
       {/* MODAL PERSONALIZADO: Confirmar Ocultar Todos */}
       <Dialog.Root open={hideAllModalOpen} onOpenChange={setHideAllModalOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50 animate-in fade-in" />
-          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-white rounded-xl p-6 shadow-pop w-[90vw] max-w-sm z-50 focus:outline-none text-center">
-            <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Dialog.Overlay className="fixed inset-0 bg-black/40 dark:bg-black/60 z-50 animate-in fade-in" />
+          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-surface border border-transparent dark:border-slate-700 rounded-xl p-6 shadow-pop w-[90vw] max-w-sm z-50 focus:outline-none text-center">
+            <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center mx-auto mb-4">
               <EyeOff size={24} />
             </div>
-            <Dialog.Title className="text-lg font-bold mb-2 text-gray-900">Ocultar Cartões</Dialog.Title>
-            <p className="text-sm text-gray-500 mb-6">Tem certeza que deseja ocultar todos os cartões visíveis desta coluna? Poderá desocultá-los individualmente depois.</p>
+            <Dialog.Title className="text-lg font-bold mb-2 text-primary">Ocultar Cartões</Dialog.Title>
+            <p className="text-sm text-secondary mb-6">Tem certeza que deseja ocultar todos os cartões visíveis desta coluna? Poderá desocultá-los individualmente depois.</p>
             <div className="flex justify-center gap-3">
               <Button type="button" variant="ghost" onClick={() => setHideAllModalOpen(false)}>Cancelar</Button>
               <Button type="button" onClick={confirmHideAll} className="bg-amber-600 hover:bg-amber-700 text-white border-transparent shadow-sm px-4 py-2 rounded-lg font-medium">Ocultar Tudo</Button>
