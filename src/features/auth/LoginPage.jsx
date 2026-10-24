@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/services/firebase';
+import { auth } from '@/firebase';
 import { toast } from 'sonner';
 
 export function LoginPage() {
